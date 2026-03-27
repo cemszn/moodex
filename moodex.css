@@ -1,5 +1,18 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Splash Screen ── */
+#splash-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  overflow: visible;
+}
+#splash-lottie {
+  width: 72px; height: 72px;
+  flex-shrink: 0;
+}
+
 :root {
   --bg: #0e0e16;
   --surface: #181824;
@@ -12,13 +25,13 @@
   --track-dim: rgba(14, 14, 22, 0.65);
 }
 
-html, body { height: 100%; overflow: hidden; }
+html, body { height: 100%; overflow: hidden; overflow: clip; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
 
 #app {
   display: flex; flex-direction: column;
   height: 100dvh; max-width: 480px; margin: 0 auto;
-  position: relative; overflow: hidden;
+  position: relative; overflow: hidden; overflow: clip;
 }
 
 /* ── Header ── */
@@ -188,15 +201,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .entry-list { display: flex; flex-direction: column; gap: 9px; }
 .entry-item {
   background: var(--surface); border-radius: 14px; padding: 13px 16px;
-  border-left: 3px solid transparent;
+  border-left: 3px solid transparent; cursor: pointer; user-select: none;
 }
-.entry-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.entry-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.entry-header-left { flex: 1; min-width: 0; }
+.entry-top-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+.entry-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.entry-time { font-size: 11.5px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
 .mood-chip {
   font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 100px;
   display: flex; align-items: center; gap: 4px;
 }
-.entry-time { font-size: 11.5px; color: var(--muted); }
-.entry-note { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry-chevron {
+  flex-shrink: 0; width: 16px; height: 16px; color: var(--muted);
+  transition: transform 0.28s ease; margin-top: 2px;
+}
+.entry-item.open .entry-chevron { transform: rotate(180deg); }
+.entry-note {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+  margin-top: 5px; overflow: hidden;
+  max-height: calc(1.5em * 2);
+  transition: max-height 0.35s ease;
+}
+.entry-item.open .entry-note { max-height: 400px; }
 
 /* ── Calendar ── */
 .cal-card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-top: 16px; }

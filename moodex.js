@@ -54,20 +54,83 @@ let curTrackTab  = 'overview';
 let calY, calM;
 
 /* ══════════════════════════════════════════════
+   SPLASH
+══════════════════════════════════════════════ */
+const _splashAnim = lottie.loadAnimation({
+  container: document.getElementById('splash-lottie'),
+  renderer: 'svg',
+  loop: false,
+  autoplay: true,
+  path: 'assets/loading.json'
+});
+_splashAnim.setSpeed(4);
+
+let _splashUsed  = false;
+let _zoomStarted = false;
+let _zoomDone    = false;
+let _authReveal  = null;
+
+function _maybeReveal() {
+  if (!_zoomDone || !_authReveal) return;
+  document.getElementById('splash-screen').style.display = 'none';
+  _splashAnim.destroy();
+  _authReveal();
+}
+
+function _startZoom() {
+  if (_zoomStarted) return;
+  _zoomStarted = true;
+  gsap.to(document.getElementById('splash-lottie'), {
+    scale: 12, opacity: 0, duration: 0.55, ease: 'power2.in',
+    onComplete: () => { _zoomDone = true; _maybeReveal(); }
+  });
+}
+
+_splashAnim.addEventListener('enterFrame', e => {
+  if ((e.currentTime / _splashAnim.totalFrames) >= 0.65) _startZoom();
+});
+
+// Fallback: if animation completes before enterFrame hits 65%
+_splashAnim.addEventListener('complete', () => _startZoom());
+
+function hideSplash(revealFn) {
+  if (_splashUsed) { revealFn(); return; }
+  _splashUsed = true;
+  _authReveal = revealFn;
+  _maybeReveal();
+}
+
+/* ══════════════════════════════════════════════
    AUTH — SCREEN MANAGEMENT
 ══════════════════════════════════════════════ */
 function showLogin() {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('loginErr').textContent = '';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPass').value = '';
+  hideSplash(() => {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPass').value = '';
+
+    const screen = document.getElementById('login-screen');
+    screen.style.display = 'flex';
+
+    const items = screen.querySelectorAll('.logo, .login-sub, .login-input, .login-err, .log-btn');
+    gsap.fromTo(items,
+      { opacity: 0, y: 32 },
+      { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', stagger: 0.13, delay: 0.15 }
+    );
+  });
 }
 
 function showApp(user) {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('userEmailSub').textContent = user.email;
+  hideSplash(() => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('userEmailSub').textContent = user.email;
+
+    gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
+    gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+    gsap.from('.journal-card, .log-btn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out' });
+  });
 }
 
 async function doSignIn() {
@@ -223,9 +286,7 @@ function initApp() {
     if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
   }).observe(document.getElementById('radarCanvas'));
 
-  gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
-  gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-  gsap.from('.journal-card, .log-btn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out' });
+  // Entry animations deferred — fired in showApp after splash exits
 }
 
 /* ══════════════════════════════════════════════
@@ -678,6 +739,7 @@ function renderRecent() {
   list.innerHTML = recent.map(entryHTML).join('');
   gsap.fromTo(list.querySelectorAll('.entry-item'),
     { opacity: 0, y: 8 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.28 });
+  list.onclick = e => { const item = e.target.closest('.entry-item'); if (item) toggleEntry(item); };
 }
 
 /* ── History ── */
@@ -685,6 +747,7 @@ function renderHistory() {
   const list = document.getElementById('historyList');
   if (!entries.length) { list.innerHTML = '<div class="empty-state">No entries yet.</div>'; return; }
   list.innerHTML = entries.map(entryHTML).join('');
+  list.onclick = e => { const item = e.target.closest('.entry-item'); if (item) toggleEntry(item); };
 }
 
 /* ── Entry HTML ── */
@@ -699,10 +762,23 @@ function entryHTML(e) {
     return `<span class="mood-chip" style="background:${m.color}20;color:${m.color}">${m.emoji} ${intensity}</span>`;
   }).join('');
   return `<div class="entry-item" style="border-left-color:${firstColor}">
-    <div class="entry-chips">${chips}</div>
-    <div class="entry-time">${t}</div>
-    ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+    <div class="entry-header">
+      <div class="entry-header-left">
+        <div class="entry-top-row">
+          <div class="entry-chips">${chips}</div>
+          <div class="entry-time">${t}</div>
+        </div>
+        ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+      </div>
+      ${e.note ? `<svg class="entry-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>` : ''}
+    </div>
   </div>`;
+}
+
+/* ── Entry expand/collapse ── */
+function toggleEntry(item) {
+  if (!item.querySelector('.entry-note')) return;
+  item.classList.toggle('open');
 }
 
 /* ══════════════════════════════════════════════
