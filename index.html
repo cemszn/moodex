@@ -37,6 +37,15 @@
 <!-- ════ APP ════ -->
 <div id="app" style="display:none">
 
+  <nav class="bottom-nav">
+    <div class="nav-brand"><span class="logo">Moodex</span></div>
+    <button class="nav-item active" id="nav-log"><i data-feather="edit-3"></i> Log</button>
+    <button class="nav-item" id="nav-track"><i data-feather="activity"></i> Track</button>
+    <button class="nav-item" id="nav-settings"><i data-feather="settings"></i> Settings</button>
+  </nav>
+
+  <div class="content-area">
+
   <header class="app-header">
     <div class="logo">Moodex</div>
     <div class="header-right">
@@ -125,21 +134,22 @@
 
       <!-- Overview -->
       <div id="view-overview">
-        <div class="radar-card">
-          <div class="radar-card-title">Mood Spider — avg. intensity per mood</div>
-          <canvas id="radarCanvas"></canvas>
+        <div class="overview-col overview-col-a">
+          <div class="radar-card">
+            <div class="radar-card-title">Mood Spider — avg. intensity per mood</div>
+            <canvas id="radarCanvas"></canvas>
+          </div>
+          <div class="section-label">Mood Breakdown</div>
+          <div id="distWrap" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
-
-        <div class="chart-card">
-          <div class="chart-label">Last 7 Days</div>
-          <div class="bars-wrap" id="barsWrap"></div>
+        <div class="overview-col overview-col-b">
+          <div class="chart-card">
+            <div class="chart-label">Last 7 Days</div>
+            <div class="bars-wrap" id="barsWrap"></div>
+          </div>
+          <div class="section-label">Recent Entries</div>
+          <div class="entry-list" id="recentList"></div>
         </div>
-
-        <div class="section-label">Mood Breakdown</div>
-        <div id="distWrap" style="display:flex;flex-direction:column;gap:8px;"></div>
-
-        <div class="section-label">Recent Entries</div>
-        <div class="entry-list" id="recentList"></div>
       </div>
 
       <!-- Calendar -->
@@ -169,11 +179,7 @@
 
   </div><!-- /pages -->
 
-  <nav class="bottom-nav">
-    <button class="nav-item active" id="nav-log"><i data-feather="edit-3"></i> Log</button>
-    <button class="nav-item" id="nav-track"><i data-feather="activity"></i> Track</button>
-    <button class="nav-item" id="nav-settings"><i data-feather="settings"></i> Settings</button>
-  </nav>
+  </div><!-- /content-area -->
 
   <div class="toast" id="toast"></div>
   <div class="success-overlay" id="successOverlay">

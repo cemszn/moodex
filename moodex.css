@@ -24,7 +24,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* ── Header ── */
 .app-header {
   flex-shrink: 0; display: flex; align-items: center;
-  justify-content: space-between; padding: 18px 20px 12px;
+  justify-content: space-between; padding: max(18px, env(safe-area-inset-top, 0px)) 20px 12px;
 }
 .logo {
   font-size: 24px; font-weight: 900; letter-spacing: -1px;
@@ -35,11 +35,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header-date { font-size: 12px; color: var(--muted); font-weight: 500; }
 .streak { font-size: 11px; color: #FFD93D; font-weight: 700; }
 
+/* ── Content area wrapper ── */
+.content-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
 /* ── Pages ── */
 .pages { flex: 1; position: relative; overflow: hidden; }
 .page {
   position: absolute; inset: 0; overflow-y: auto;
-  padding: 4px 16px calc(var(--nav-h) + 28px);
+  padding: 4px 16px calc(var(--nav-h) + max(28px, calc(env(safe-area-inset-bottom, 0px) + 20px)));
   scrollbar-width: none; will-change: transform, opacity;
 }
 .page::-webkit-scrollbar { display: none; }
@@ -221,7 +224,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ── Toast ── */
 .toast {
-  position: fixed; bottom: calc(var(--nav-h) + 18px); left: 50%;
+  position: fixed; bottom: calc(var(--nav-h) + max(18px, calc(env(safe-area-inset-bottom, 0px) + 14px))); left: 50%;
   transform: translateX(-50%) translateY(8px); background: var(--surface2);
   border: 1px solid var(--border); padding: 9px 18px; border-radius: 100px;
   font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; z-index: 300; white-space: nowrap;
@@ -236,13 +239,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ── Bottom Nav ── */
 .bottom-nav {
-  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px)); left: 50%; transform: translateX(-50%);
   width: calc(min(100vw, 480px) - 32px);
   background: rgba(24, 24, 36, 0.94); backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border);
   border-radius: 26px; height: 60px; display: flex; padding: 5px; gap: 5px;
   z-index: 200; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
+.nav-brand { display: none; }
 .nav-item {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
   border: none; background: transparent; border-radius: 20px; color: var(--muted);
@@ -341,7 +345,8 @@ body.light .log-btn {
 #login-screen {
   position: fixed; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg); z-index: 1000; padding: 32px 24px;
+  background: var(--bg); z-index: 1000;
+  padding: max(32px, env(safe-area-inset-top, 0px)) 24px max(32px, env(safe-area-inset-bottom, 0px));
 }
 
 .login-card {
@@ -375,3 +380,125 @@ body.light .login-input:focus { border-color: rgba(0,0,0,0.22); }
 }
 
 .login-card .log-btn { margin-top: 4px; }
+
+/* ══════════════════════════════════════════════
+   TABLET — iPad Air portrait (768px+)
+══════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  #app { max-width: 640px; }
+
+  .app-header {
+    padding: max(20px, env(safe-area-inset-top, 0px)) 28px 14px;
+  }
+
+  .page {
+    padding: 4px 24px calc(var(--nav-h) + max(32px, calc(env(safe-area-inset-bottom, 0px) + 24px)));
+  }
+
+  .bottom-nav {
+    width: calc(min(100vw, 640px) - 32px);
+  }
+
+  .mood-grid { gap: 12px; }
+
+  .int-row { padding: 16px 20px 18px; }
+
+  .radar-card, .chart-card, .cal-card { padding: 20px; }
+}
+
+/* ══════════════════════════════════════════════
+   DESKTOP — computer + iPad Air landscape (1024px+)
+══════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  #app {
+    flex-direction: row;
+    max-width: 1100px;
+    height: 100dvh;
+  }
+
+  /* ── Sidebar ── */
+  .bottom-nav {
+    position: relative;
+    bottom: auto; left: auto; transform: none;
+    width: 220px; flex-shrink: 0; height: 100%;
+    flex-direction: column;
+    align-items: stretch;   /* items stretch to sidebar width; margins create inset */
+    justify-content: flex-start;
+    padding: 0;
+    gap: 0;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    box-shadow: none;
+    z-index: auto;
+    overflow: hidden;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    padding: 26px 20px 22px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    margin-bottom: 8px;
+  }
+
+  .nav-brand .logo { font-size: 22px; }
+
+  .bottom-nav .nav-item {
+    flex: none;                   /* don't grow/shrink to fill height */
+    /* width comes from align-items: stretch minus margins = 220 - 24 = 196px */
+    margin: 2px 12px;
+    padding: 10px 14px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    gap: 11px;
+    height: auto;
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .bottom-nav .nav-item svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+    opacity: 0.55;
+    transition: opacity 0.15s;
+  }
+
+  .bottom-nav .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .bottom-nav .nav-item:hover svg { opacity: 1; }
+
+  .bottom-nav .nav-item.active { background: var(--surface2); color: var(--text); }
+  .bottom-nav .nav-item.active svg { opacity: 1; }
+
+  /* ── Header (content side) ── */
+  .app-header .logo { display: none; }
+  .app-header { justify-content: flex-end; padding: 20px 40px 16px; border-bottom: 1px solid var(--border); }
+
+  /* ── Content area ── */
+  .content-area { flex: 1; min-width: 0; }
+
+  .page { padding: 8px 40px 40px; }
+
+  /* ── Track — 2-column overview split ── */
+  #view-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+    align-items: start;
+  }
+
+  .overview-col { min-width: 0; }
+
+  .radar-card, .chart-card { margin-top: 16px; }
+
+  .toast { bottom: 28px; }
+
+  body.light .bottom-nav { background: var(--surface); box-shadow: none; }
+}

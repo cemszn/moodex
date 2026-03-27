@@ -219,6 +219,10 @@ function initApp() {
 
   feather.replace();
 
+  new ResizeObserver(() => {
+    if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
+  }).observe(document.getElementById('radarCanvas'));
+
   gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
   gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
   gsap.from('.journal-card, .log-btn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out' });
