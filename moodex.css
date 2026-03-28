@@ -25,12 +25,20 @@
   --track-dim: rgba(14, 14, 22, 0.65);
 }
 
-html, body { height: 100%; overflow: hidden; overflow: clip; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+html { height: 100%; overflow: hidden; }
+body {
+  height: 100%;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg); color: var(--text);
+}
 
 #app {
   display: flex; flex-direction: column;
-  height: 100dvh; max-width: 480px; margin: 0 auto;
+  height: 100%;
+  max-width: 480px; margin: 0 auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ── Header ── */
@@ -250,7 +258,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ── Toast ── */
 .toast {
-  position: fixed; bottom: calc(max(12px, env(safe-area-inset-bottom, 0px)) + 76px); left: 50%;
+  position: fixed; bottom: 100px; left: 50%;
   transform: translateX(-50%) translateY(8px); background: var(--surface2);
   border: 1px solid var(--border); padding: 9px 18px; border-radius: 100px;
   font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; z-index: 300; white-space: nowrap;
@@ -266,7 +274,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* ── Bottom Nav ── */
 .bottom-nav {
   order: 2; flex-shrink: 0; align-self: center;
-  margin: 8px auto max(12px, env(safe-area-inset-bottom, 0px));
+  margin: 8px auto 10px;
   width: calc(100% - 32px);
   background: rgba(24, 24, 36, 0.94); backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border);
