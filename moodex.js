@@ -899,18 +899,4 @@ document.getElementById('loginPass').addEventListener('keydown', e => {
   if (e.key === 'Enter') doSignIn();
 });
 
-/* ══════════════════════════════════════════════
-   iOS 17 PWA FIX — position:fixed elements drift
-   upward after app is backgrounded/resumed due to
-   a ghost Safari toolbar offset. Force a reflow
-   on the nav wrapper to reset its position.
-══════════════════════════════════════════════ */
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return;
-  const wrap = document.getElementById('navWrap');
-  if (!wrap || wrap.style.display === 'none') return;
-  wrap.style.display = 'none';
-  wrap.offsetHeight; // force reflow
-  wrap.style.display = 'block';
-});
 
