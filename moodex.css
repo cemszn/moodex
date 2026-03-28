@@ -247,18 +247,19 @@ body {
 .bar-body { width: 100%; border-radius: 7px 7px 0 0; min-height: 3px; }
 .bar-day { font-size: 10px; color: var(--muted); }
 
-/* ── Distribution ── */
-.dist-row {
-  background: var(--surface); border-radius: 14px; padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 8px;
+/* ── Distribution Chips ── */
+.dist-chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dist-chip {
+  background: color-mix(in srgb, var(--mc) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--mc) 22%, transparent);
+  border-radius: 14px; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 2px;
 }
-.dist-top { display: flex; justify-content: space-between; align-items: center; }
-.dist-name-wrap { display: flex; align-items: center; gap: 8px; }
-.dist-icon { font-size: 17px; width: 20px; text-align: center; }
-.dist-name { font-size: 13px; font-weight: 600; }
-.dist-count { font-size: 11px; color: var(--muted); }
-.dist-track { background: var(--surface2); border-radius: 100px; height: 5px; overflow: hidden; }
-.dist-fill { height: 100%; border-radius: 100px; width: 0; }
+.dist-chip-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.dist-chip-icon { font-size: 14px; color: var(--mc); }
+.dist-chip-name { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.dist-chip-pct { font-size: 28px; font-weight: 700; color: var(--mc); line-height: 1; }
+.dist-chip-cnt { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 /* ── Entry List ── */
 .entry-list { display: flex; flex-direction: column; gap: 9px; }
@@ -380,12 +381,13 @@ body {
 .fab-menu-item {
   display: flex; align-items: center; gap: 10px;
   padding: 11px 20px;
-  background: var(--surface); border: 1px solid var(--border);
+  background: rgba(24, 24, 36, 0.72); border: 1px solid var(--border);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-radius: 30px; color: var(--muted);
   font-size: 13.5px; font-weight: 600; font-family: inherit;
   white-space: nowrap;
   opacity: 0; transform: translateY(-10px) scale(0.92);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
   cursor: pointer; pointer-events: none;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s, color 0.15s;
@@ -435,8 +437,8 @@ body.light {
 body.light .streak { color: #E85D00; }
 
 body.light .fab-menu-item {
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.72);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 body.light .fab-menu-item.active { background: var(--surface2); }
 
@@ -573,12 +575,6 @@ body.light .login-input:focus { border-color: rgba(255, 146, 43, 0.7); }
 
   .radar-card, .chart-card, .cal-card { padding: 20px; }
 
-  #view-overview {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 16px;
-    align-items: start;
-  }
 }
 
 /* ══════════════════════════════════════════════
@@ -617,12 +613,12 @@ body.light .login-input:focus { border-color: rgba(255, 146, 43, 0.7); }
     gap: 4px;
     top: auto; right: auto;
     padding: 6px;
-    background: rgba(24, 24, 36, 0.94);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--border);
+    background: rgba(24, 24, 36, 0.55);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border: 1px solid rgba(255,255,255,0.09);
     border-radius: 26px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
   }
 
   .fab-menu-item {
@@ -648,8 +644,8 @@ body.light .login-input:focus { border-color: rgba(255, 146, 43, 0.7); }
   .fab-btn { display: none; }
 
   body.light .fab-menu {
-    background: rgba(255,255,255,0.92);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.55);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
   }
 }
 

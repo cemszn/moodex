@@ -636,7 +636,6 @@ function switchTrackTab(tab) {
 
 /* ── Overview ── */
 function renderOverview() {
-  renderWeekBars();
   renderDistribution();
   renderRecent();
   requestAnimationFrame(() => animateRadar());
@@ -661,7 +660,7 @@ function moodAverages() {
 function renderRadar(progress = 1, _avgs, _faReady) {
   const canvas = document.getElementById('radarCanvas');
   const dpr    = window.devicePixelRatio || 1;
-  const size   = canvas.parentElement.clientWidth - 32;
+  const size   = canvas.parentElement.clientWidth;
   canvas.width  = size * dpr;
   canvas.height = size * dpr;
   canvas.style.height = size + 'px';
@@ -769,21 +768,21 @@ function renderRadar(progress = 1, _avgs, _faReady) {
   ctx.textBaseline = 'middle';
   MOODS.forEach((m, i) => {
     const a  = ang(i);
-    const lR = R + 26;
+    const lR = R + 32;
     const lx = cx + lR * Math.cos(a);
     const ly = cy + lR * Math.sin(a);
     if (faReady) {
-      ctx.font = '900 15px "Font Awesome 6 Free"';
+      ctx.font = '900 20px "Font Awesome 6 Free"';
       ctx.fillStyle = avgs[m.id] > 0 ? m.color : c.hint;
-      ctx.fillText(m.unicode, lx, ly - 7);
+      ctx.fillText(m.unicode, lx, ly - 8);
     } else {
-      ctx.font = '16px serif';
+      ctx.font = '20px serif';
       ctx.fillStyle = c.label;
-      ctx.fillText(m.emoji, lx, ly - 7);
+      ctx.fillText(m.emoji, lx, ly - 8);
     }
-    ctx.font = '600 9px -apple-system, sans-serif';
+    ctx.font = '600 10px -apple-system, sans-serif';
     ctx.fillStyle = avgs[m.id] > 0 ? m.color : c.hint;
-    ctx.fillText(m.label, lx, ly + 7);
+    ctx.fillText(m.label, lx, ly + 11);
   });
 
   const totalLogged = MOODS.filter(m => avgs[m.id] > 0).length;
@@ -809,45 +808,6 @@ function animateRadar() {
   });
 }
 
-/* ── Week Bars ── */
-function renderWeekBars() {
-  const wrap = document.getElementById('barsWrap');
-  wrap.innerHTML = '';
-  const dayAbbr = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
-  });
-  const needed = new Set(days.map(d => localDateStr(d)));
-  const dayMap = {};
-  entries.forEach(e => {
-    const ds = localDateStr(e.ts);
-    if (needed.has(ds)) (dayMap[ds] = dayMap[ds] || []).push(e);
-  });
-  days.forEach((d, i) => {
-    const ds   = localDateStr(d);
-    const dayE = dayMap[ds] || [];
-    const col  = document.createElement('div');
-    col.className = 'bar-col';
-
-    let color = 'var(--surface2)', pct = 6;
-    if (dayE.length) {
-      const allMoods = dayE.flatMap(e => e.moods);
-      const avgInt   = allMoods.reduce((s, m) => s + m.intensity, 0) / allMoods.length;
-      const m        = MOODS.find(m => m.id === dayE[0].moods[0].id);
-      color = m ? m.color : '#888';
-      pct   = avgInt / 10 * 100;
-    }
-
-    col.innerHTML = `<div class="bar-body" style="background:${color};height:${dayE.length ? 0 : pct}%"></div>
-                     <div class="bar-day">${dayAbbr[d.getDay()]}</div>`;
-    wrap.appendChild(col);
-
-    if (dayE.length) {
-      gsap.to(col.querySelector('.bar-body'), { height: pct + '%', duration: 0.5, delay: i * 0.055, ease: 'power2.out' });
-    }
-  });
-}
-
 /* ── Distribution ── */
 function renderDistribution() {
   const wrap = document.getElementById('distWrap');
@@ -856,36 +816,29 @@ function renderDistribution() {
   const counts = {};
   entries.forEach(e => e.moods.forEach(({ id }) => counts[id] = (counts[id] || 0) + 1));
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
-  const top   = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-  wrap.innerHTML = top.map(([id, cnt]) => {
+  wrap.innerHTML = `<div class="dist-chip-grid">${sorted.map(([id, cnt]) => {
     const m   = MOODS.find(m => m.id === id);
     const pct = Math.round(cnt / total * 100);
-    return `<div class="dist-row">
-      <div class="dist-top">
-        <div class="dist-name-wrap">
-          <span class="dist-icon" style="color:${m.color}"><i class="fa-solid ${m.icon}"></i></span>
-          <span class="dist-name">${m.label}</span>
-        </div>
-        <span class="dist-count">${cnt} log${cnt > 1 ? 's' : ''} · ${pct}%</span>
+    return `<div class="dist-chip" style="--mc:${m.color}">
+      <div class="dist-chip-head">
+        <span class="dist-chip-icon"><i class="fa-solid ${m.icon}"></i></span>
+        <span class="dist-chip-name">${m.label}</span>
       </div>
-      <div class="dist-track">
-        <div class="dist-fill" data-w="${pct}%" style="background:${m.color}"></div>
-      </div>
+      <div class="dist-chip-pct">${pct}%</div>
+      <div class="dist-chip-cnt">${cnt} log${cnt > 1 ? 's' : ''}</div>
     </div>`;
-  }).join('');
+  }).join('')}</div>`;
 
-  requestAnimationFrame(() => {
-    if (!reducedMotion) {
-      gsap.fromTo(wrap.querySelectorAll('.dist-row'),
+  if (!reducedMotion) {
+    requestAnimationFrame(() =>
+      gsap.fromTo(wrap.querySelectorAll('.dist-chip'),
         { opacity: 0, y: 8 },
-        { opacity: 1, y: 0, stagger: 0.07, duration: 0.25, ease: 'power2.out', clearProps: 'opacity,transform' }
-      );
-    }
-    wrap.querySelectorAll('.dist-fill').forEach((f, i) =>
-      gsap.to(f, { width: f.dataset.w, duration: 0.65, ease: 'power2.out', delay: reducedMotion ? 0 : i * 0.07 + 0.1 })
+        { opacity: 1, y: 0, stagger: 0.06, duration: 0.25, ease: 'power2.out', clearProps: 'opacity,transform' }
+      )
     );
-  });
+  }
 }
 
 /* ── Recent ── */
