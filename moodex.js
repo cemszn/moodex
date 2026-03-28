@@ -325,6 +325,16 @@ function initApp() {
     document.getElementById('cCount').textContent = this.value.length;
   });
 
+  document.getElementById('editJournalTa').addEventListener('input', function() {
+    document.getElementById('editCCount').textContent = this.value.length;
+  });
+  document.getElementById('editModalClose').addEventListener('click', closeEditModal);
+  document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+  document.getElementById('editSaveBtn').addEventListener('click', saveEdit);
+  document.getElementById('editModalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('editModalOverlay')) closeEditModal();
+  });
+
   document.getElementById('logBtn').addEventListener('click', doLog);
   document.getElementById('fabBtn').addEventListener('click', toggleFab);
   document.getElementById('nav-log').addEventListener('click', () => { closeFab(); goPage('log'); });
@@ -855,12 +865,14 @@ function renderRecent() {
   list.onclick = e => {
     const del = e.target.closest('.entry-delete');
     if (del) { deleteEntry(del.dataset.docid); return; }
+    const edit = e.target.closest('.entry-edit');
+    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
     const item = e.target.closest('.entry-item');
     if (item) toggleEntry(item);
   };
   list.onkeydown = e => {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.entry-delete')) return;
+      if (e.target.closest('.entry-delete') || e.target.closest('.entry-edit')) return;
       const item = e.target.closest('.entry-item');
       if (item) { e.preventDefault(); toggleEntry(item); }
     }
@@ -879,12 +891,14 @@ function renderHistory() {
   list.onclick = e => {
     const del = e.target.closest('.entry-delete');
     if (del) { deleteEntry(del.dataset.docid); return; }
+    const edit = e.target.closest('.entry-edit');
+    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
     const item = e.target.closest('.entry-item');
     if (item) toggleEntry(item);
   };
   list.onkeydown = e => {
     if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.entry-delete')) return;
+      if (e.target.closest('.entry-delete') || e.target.closest('.entry-edit')) return;
       const item = e.target.closest('.entry-item');
       if (item) { e.preventDefault(); toggleEntry(item); }
     }
@@ -913,6 +927,7 @@ function entryHTML(e) {
       </div>
       <div class="entry-actions">
         ${e.note ? `<i class="entry-chevron fa-solid fa-chevron-down"></i>` : ''}
+        <button class="entry-edit" type="button" aria-label="Edit entry" data-docid="${e._docId || ''}"><i class="fa-solid fa-pen"></i></button>
         <button class="entry-delete" type="button" aria-label="Delete entry" data-docid="${e._docId || ''}"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     </div>
@@ -923,6 +938,160 @@ function entryHTML(e) {
 function toggleEntry(item) {
   if (!item.querySelector('.entry-note')) return;
   item.classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════════
+   EDIT MODAL
+══════════════════════════════════════════════ */
+let editPickedMoods = new Map();
+let editDocId       = null;
+let editEntryTs     = null;
+let editEntryId     = null;
+
+function openEditModal(entry) {
+  editDocId      = entry._docId;
+  editEntryTs    = entry.ts;
+  editEntryId    = entry.id;
+  editPickedMoods = new Map(entry.moods.map(m => [m.id, m.intensity]));
+
+  // Build mood grid
+  const grid = document.getElementById('editMoodGrid');
+  grid.innerHTML = '';
+  MOODS.forEach(m => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'mood-btn';
+    el.style.setProperty('--mc', m.color);
+    el.dataset.id = m.id;
+    const isSelected = editPickedMoods.has(m.id);
+    el.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+    if (isSelected) el.classList.add('selected');
+    el.innerHTML = `<span class="m-icon" aria-hidden="true"><i class="fa-solid ${m.icon}"></i></span><span class="m-label">${m.label}</span>
+      <span class="m-check" aria-hidden="true"><svg viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none"/></svg></span>`;
+    el.addEventListener('click', () => editToggleMood(m.id, el));
+    grid.appendChild(el);
+  });
+
+  // Build intensity rows
+  const rowsEl = document.getElementById('editMoodIntRows');
+  rowsEl.innerHTML = '';
+  entry.moods.forEach(({ id, intensity }) => editAddIntRow(id, intensity));
+
+  document.getElementById('editIntSection').style.display = editPickedMoods.size > 0 ? 'block' : 'none';
+
+  const ta = document.getElementById('editJournalTa');
+  ta.value = entry.note || '';
+  document.getElementById('editCCount').textContent = ta.value.length;
+
+  const overlay = document.getElementById('editModalOverlay');
+  const modal   = document.getElementById('editModal');
+  overlay.style.display = 'flex';
+  if (!reducedMotion) {
+    gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.2 });
+    gsap.fromTo(modal,   { y: 60 }, { y: 0, duration: 0.32, ease: 'power3.out' });
+  }
+}
+
+function closeEditModal() {
+  const overlay = document.getElementById('editModalOverlay');
+  const modal   = document.getElementById('editModal');
+  if (!reducedMotion) {
+    gsap.timeline()
+      .to(modal,   { y: 60, duration: 0.22, ease: 'power2.in' })
+      .to(overlay, { opacity: 0, duration: 0.15, onComplete: () => { overlay.style.display = 'none'; gsap.set(overlay, { opacity: 1 }); } }, '<0.08');
+  } else {
+    overlay.style.display = 'none';
+  }
+  editDocId = null;
+  editPickedMoods = new Map();
+}
+
+function editToggleMood(id, el) {
+  if (editPickedMoods.has(id)) {
+    editPickedMoods.delete(id);
+    el.classList.remove('selected');
+    el.setAttribute('aria-pressed', 'false');
+    editRemoveIntRow(id);
+    if (editPickedMoods.size === 0) document.getElementById('editIntSection').style.display = 'none';
+  } else {
+    editPickedMoods.set(id, 5);
+    el.classList.add('selected');
+    el.setAttribute('aria-pressed', 'true');
+    editAddIntRow(id, 5);
+    document.getElementById('editIntSection').style.display = 'block';
+  }
+}
+
+function editAddIntRow(moodId, initialVal = 5) {
+  const m   = MOODS.find(m => m.id === moodId);
+  const val = initialVal;
+  const pct = ((val - 1) / 9 * 100).toFixed(1) + '%';
+
+  const row = document.createElement('div');
+  row.className = 'int-row';
+  row.id = 'edit-irow-' + moodId;
+  row.style.setProperty('--mc', m.color);
+  row.innerHTML = `
+    <div class="ir-header">
+      <span class="ir-icon"><i class="fa-solid ${m.icon}"></i></span>
+      <span class="ir-name">${m.label}</span>
+      <span class="ir-val">${val}</span>
+      <span class="ir-unit">/10</span>
+      <button class="ir-remove" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <input type="range" class="mood-slider" min="1" max="10" value="${val}">`;
+
+  const slider = row.querySelector('.mood-slider');
+  const valEl  = row.querySelector('.ir-val');
+  slider.style.setProperty('--pct', pct);
+  slider.addEventListener('input', () => {
+    const v = +slider.value;
+    editPickedMoods.set(moodId, v);
+    valEl.textContent = v;
+    slider.style.setProperty('--pct', ((v - 1) / 9 * 100).toFixed(1) + '%');
+    if (!reducedMotion) gsap.fromTo(valEl, { scale: 1.3 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+  });
+
+  row.querySelector('.ir-remove').addEventListener('click', () => {
+    editPickedMoods.delete(moodId);
+    const moodBtn = document.querySelector(`#editMoodGrid .mood-btn[data-id="${moodId}"]`);
+    if (moodBtn) { moodBtn.classList.remove('selected'); moodBtn.setAttribute('aria-pressed', 'false'); }
+    editRemoveIntRow(moodId);
+    if (editPickedMoods.size === 0) document.getElementById('editIntSection').style.display = 'none';
+  });
+
+  document.getElementById('editMoodIntRows').appendChild(row);
+}
+
+function editRemoveIntRow(moodId) {
+  document.getElementById('edit-irow-' + moodId)?.remove();
+}
+
+async function saveEdit() {
+  if (editPickedMoods.size === 0) {
+    showToast('Pick at least one mood 👆');
+    return;
+  }
+
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const moodsArr = Array.from(editPickedMoods.entries()).map(([id, intensity]) => ({ id, intensity }));
+  const note     = document.getElementById('editJournalTa').value.trim();
+
+  try {
+    await setDoc(
+      doc(db, 'users', currentUser.uid, 'entries', editDocId),
+      { id: editEntryId, moods: moodsArr, note, ts: editEntryTs }
+    );
+    closeEditModal();
+    showToast('Entry updated.');
+  } catch {
+    showToast('Could not save. Check your connection.');
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  }
 }
 
 /* ── Entry delete ── */
@@ -1011,6 +1180,8 @@ function showDayDetail(ds, dayE, cell) {
   calList.onclick = e => {
     const del = e.target.closest('.entry-delete');
     if (del) { deleteEntry(del.dataset.docid); return; }
+    const edit = e.target.closest('.entry-edit');
+    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
     const item = e.target.closest('.entry-item');
     if (item) toggleEntry(item);
   };

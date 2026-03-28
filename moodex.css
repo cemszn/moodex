@@ -261,6 +261,75 @@ body {
 .dist-chip-pct { font-size: 28px; font-weight: 700; color: var(--mc); line-height: 1; }
 .dist-chip-cnt { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
+/* ── Edit Button ── */
+.entry-edit {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer; flex-shrink: 0;
+  color: var(--muted); display: flex; align-items: center; justify-content: center;
+  font-family: inherit; transition: background 0.15s, color 0.15s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.entry-edit:hover { background: rgba(255, 210, 61, 0.14); color: #FFD93D; }
+.entry-edit:active { transform: scale(0.88); }
+.entry-edit i { font-size: 11px; pointer-events: none; }
+
+/* ── Edit Modal ── */
+.edit-modal-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.55);
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.edit-modal {
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 480px; max-height: 92dvh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.35);
+}
+.edit-modal-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border); margin: 10px auto 0; flex-shrink: 0;
+}
+.edit-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px 0; flex-shrink: 0;
+}
+.edit-modal-title { font-size: 17px; font-weight: 700; }
+.edit-modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--surface2); border: none; color: var(--muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-family: inherit; font-size: 14px;
+  transition: background 0.15s, color 0.15s;
+}
+.edit-modal-close:hover { background: color-mix(in srgb, var(--text) 12%, var(--surface2)); color: var(--text); }
+.edit-modal-body {
+  padding: 0 16px; overflow-y: auto; flex: 1; scrollbar-width: none;
+}
+.edit-modal-body::-webkit-scrollbar { display: none; }
+.edit-modal-footer {
+  display: flex; gap: 10px;
+  padding: 14px 20px max(20px, env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0; border-top: 1px solid var(--border);
+}
+.edit-cancel-btn {
+  flex: 1; padding: 14px; background: var(--surface2); border: none;
+  border-radius: var(--radius); color: var(--text);
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.edit-cancel-btn:hover { background: color-mix(in srgb, var(--text) 10%, var(--surface2)); }
+.edit-save-btn {
+  flex: 2; padding: 14px;
+  background: linear-gradient(130deg, #FFD93D 0%, #FF922B 60%, #FF6B6B 100%);
+  border: none; border-radius: var(--radius); color: #0e0e16;
+  font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 20px rgba(255,146,43,0.35);
+  transition: box-shadow 0.2s, transform 0.15s, opacity 0.2s;
+}
+.edit-save-btn:hover { box-shadow: 0 8px 32px rgba(255,146,43,0.55); transform: translateY(-1px); }
+.edit-save-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; pointer-events: none; }
+
 /* ── Entry List ── */
 .entry-list { display: flex; flex-direction: column; gap: 9px; }
 .entry-item {

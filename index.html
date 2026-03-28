@@ -185,6 +185,38 @@
     <div class="success-ring" id="successRing"></div>
   </div>
 
+  <!-- Edit Entry Modal -->
+  <div class="edit-modal-overlay" id="editModalOverlay">
+    <div class="edit-modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="edit-modal-handle"></div>
+      <div class="edit-modal-header">
+        <div class="edit-modal-title" id="editModalTitle">Edit Entry</div>
+        <button class="edit-modal-close" id="editModalClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="edit-modal-body">
+        <div class="section-label" style="margin-top:12px">Moods</div>
+        <div class="mood-grid" id="editMoodGrid"></div>
+        <div id="editIntSection" style="display:none">
+          <div class="section-label">Intensities</div>
+          <div id="editMoodIntRows"></div>
+        </div>
+        <div class="section-label">Note</div>
+        <div class="journal-card" style="margin-bottom:8px">
+          <textarea class="journal-ta" id="editJournalTa"
+            placeholder="What's on your mind? (optional)" maxlength="300" rows="3"></textarea>
+          <div class="journal-footer">
+            <span class="char-count"><span id="editCCount">0</span> / 300</span>
+            <i class="fa-solid fa-pen" style="font-size:13px;color:var(--muted)"></i>
+          </div>
+        </div>
+      </div>
+      <div class="edit-modal-footer">
+        <button class="edit-cancel-btn" id="editCancelBtn" type="button">Cancel</button>
+        <button class="edit-save-btn" id="editSaveBtn" type="button">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- NAV — absolute within #app so it respects content max-width -->
   <div id="navWrap" style="display:none">
     <div class="fab-nav" id="fabNav">
