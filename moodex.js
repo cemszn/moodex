@@ -126,7 +126,7 @@ function showApp(user) {
   hideSplash(() => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('navWrap').style.display = 'block';
+    document.getElementById('navWrap').style.display = 'flex';
     document.getElementById('userEmailSub').textContent = user.email;
 
     gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
@@ -260,9 +260,13 @@ function initApp() {
   });
 
   document.getElementById('logBtn').addEventListener('click', doLog);
-  document.getElementById('nav-log').addEventListener('click', () => goPage('log'));
-  document.getElementById('nav-track').addEventListener('click', () => goPage('track'));
-  document.getElementById('nav-settings').addEventListener('click', () => goPage('settings'));
+  document.getElementById('fabBtn').addEventListener('click', toggleFab);
+  document.getElementById('nav-log').addEventListener('click', () => { closeFab(); goPage('log'); });
+  document.getElementById('nav-track').addEventListener('click', () => { closeFab(); goPage('track'); });
+  document.getElementById('nav-settings').addEventListener('click', () => { closeFab(); goPage('settings'); });
+  document.addEventListener('click', e => {
+    if (fabOpen && !document.getElementById('fabNav').contains(e.target)) closeFab();
+  });
   document.getElementById('trackTabs').addEventListener('click', e => {
     const t = e.target.dataset.tab; if (t) switchTrackTab(t);
   });
@@ -448,6 +452,43 @@ async function doLog() {
   document.getElementById('cCount').textContent = 0;
   hideIntLabel();
   gsap.to('#logBtn', { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
+}
+
+/* ══════════════════════════════════════════════
+   FAB NAVIGATION
+══════════════════════════════════════════════ */
+let fabOpen = false;
+
+function toggleFab() {
+  fabOpen ? closeFab() : openFab();
+}
+
+function openFab() {
+  fabOpen = true;
+  const nav = document.getElementById('fabNav');
+  const items = document.querySelectorAll('.fab-menu-item');
+  nav.classList.add('open');
+  items.forEach(el => { el.style.pointerEvents = 'all'; });
+  gsap.fromTo(items,
+    { opacity: 0, y: 18, scale: 0.85 },
+    { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: 'back.out(1.6)', stagger: 0.07 }
+  );
+  gsap.to('#fabBtn', { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1 });
+}
+
+function closeFab() {
+  if (!fabOpen) return;
+  fabOpen = false;
+  const nav = document.getElementById('fabNav');
+  const items = document.querySelectorAll('.fab-menu-item');
+  gsap.to(items, {
+    opacity: 0, y: 14, scale: 0.88, duration: 0.18, ease: 'power2.in',
+    stagger: { each: 0.05, from: 'end' },
+    onComplete: () => {
+      nav.classList.remove('open');
+      items.forEach(el => { el.style.pointerEvents = 'none'; });
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════
