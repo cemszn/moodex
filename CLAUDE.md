@@ -12,7 +12,7 @@ Moodex is a **vanilla JavaScript PWA** for emotional wellness tracking. Users lo
 
 - **Firebase 12.11.0** — Auth + Firestore
 - **GSAP 3.12.2** — Animations and page transitions
-- **Feather Icons** — Icon system (call `feather.replace()` after DOM changes)
+- **Font Awesome 6.7.2** — Icon system (CSS webfont, no JS calls needed; icons render via `<i class="fa-solid fa-...">` elements)
 - **Lottie Web 5.12.2** — Splash screen animation
 
 ## Architecture
@@ -68,3 +68,18 @@ All charts are drawn on `<canvas>` elements using the Canvas 2D API — no chart
 ## Firebase Config
 
 The Firebase config object is hardcoded in `moodex.js` (around line 14). This is intentional for client-side web apps — security is enforced by Firestore security rules, not by hiding the keys.
+
+## Design Context
+
+### Users
+Personal tool — a single person, used daily as a quick emotional check-in and private journal. Speed matters: log a mood in under 10 seconds, then leave.
+
+### Brand Personality
+**Alive · Warm · Expressive** — Not corporate wellness. More like a personal sketchbook with a pulse. References: Streaks, Finch.
+
+### Design Principles
+1. **Emotion is the content** — Every color exists to reflect mood. Design serves the mood system.
+2. **Fast in, fast out** — Log flow must feel frictionless. No cognitive load.
+3. **Celebrate every log** — Small wins matter. The app should feel like it's rooting for you.
+4. **Personal, not product** — Intimate over polished-corporate. Handcrafted details.
+5. **Colors are living things** — Per-mood colors communicate data; never gray them out.

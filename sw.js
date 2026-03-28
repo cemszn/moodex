@@ -1,10 +1,14 @@
-const CACHE = 'moodex-v21';
+const CACHE = 'moodex-v25';
 const ASSETS = [
   './',
-  './moodex.css?v=20',
+  './moodex.css?v=23',
   './moodex.js',
   './manifest.json',
   './icon.svg',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png',
+  './assets/loading.json',
 ];
 
 self.addEventListener('install', e => {

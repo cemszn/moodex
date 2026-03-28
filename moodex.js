@@ -8,7 +8,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import {
   getFirestore, collection, doc,
-  addDoc, setDoc, onSnapshot, query, orderBy
+  addDoc, setDoc, deleteDoc, onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -28,17 +28,30 @@ const db          = getFirestore(firebaseApp);
    CONSTANTS
 ══════════════════════════════════════════════ */
 const MOODS = [
-  { id:'happy',    emoji:'😊', label:'Happy',    color:'#FFD93D' },
-  { id:'excited',  emoji:'🤩', label:'Excited',  color:'#FF922B' },
-  { id:'grateful', emoji:'🙏', label:'Grateful', color:'#FF6EB4' },
-  { id:'calm',     emoji:'😌', label:'Calm',     color:'#6BCB77' },
-  { id:'sad',      emoji:'😢', label:'Sad',      color:'#6C9BCF' },
-  { id:'anxious',  emoji:'😰', label:'Anxious',  color:'#A66CFF' },
-  { id:'angry',    emoji:'😠', label:'Angry',    color:'#FF6B6B' },
-  { id:'tired',    emoji:'😴', label:'Tired',    color:'#99A0AE' },
+  { id:'happy',    emoji:'😊', icon:'fa-face-smile',       unicode:'\uf118', label:'Happy',    color:'#FFD93D' },
+  { id:'excited',  emoji:'🤩', icon:'fa-face-grin-stars',  unicode:'\uf587', label:'Excited',  color:'#FF922B' },
+  { id:'grateful', emoji:'🙏', icon:'fa-hands-praying',    unicode:'\ue4f9', label:'Grateful', color:'#FF6EB4' },
+  { id:'calm',     emoji:'😌', icon:'fa-face-smile-beam',  unicode:'\uf5b8', label:'Calm',     color:'#6BCB77' },
+  { id:'sad',      emoji:'😢', icon:'fa-face-sad-tear',    unicode:'\uf5b4', label:'Sad',      color:'#6C9BCF' },
+  { id:'anxious',  emoji:'😰', icon:'fa-face-grimace',     unicode:'\uf57f', label:'Anxious',  color:'#A66CFF' },
+  { id:'angry',    emoji:'😠', icon:'fa-face-angry',       unicode:'\uf556', label:'Angry',    color:'#FF6B6B' },
+  { id:'tired',    emoji:'😴', icon:'fa-face-tired',       unicode:'\uf5c8', label:'Tired',    color:'#99A0AE' },
 ];
 const MONTHS     = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const PAGE_ORDER = ['log', 'track', 'settings'];
+
+/* ══════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════ */
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// Returns local YYYY-MM-DD for a Date object or ISO timestamp string
+function localDateStr(ts) {
+  const d = ts instanceof Date ? ts : new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 /* ══════════════════════════════════════════════
    STATE
@@ -185,9 +198,12 @@ function subscribeEntries(uid) {
   );
 
   unsubscribeEntries = onSnapshot(q, snapshot => {
-    entries = snapshot.docs.map(d => d.data());
+    entries = snapshot.docs.map(d => ({ ...d.data(), _docId: d.id }));
     updateStreak();
     if (curPage === 'track') renderTrackPage();
+  }, err => {
+    console.error('Firestore sync error:', err);
+    showToast('Sync error — check your connection.');
   });
 }
 
@@ -235,9 +251,51 @@ onAuthStateChanged(auth, user => {
 /* ══════════════════════════════════════════════
    INIT APP
 ══════════════════════════════════════════════ */
+function getHeroGreeting() {
+  const h = new Date().getHours();
+  const pools = {
+    deep_night: [
+      "Still awake? Your feelings are too.",
+      "3am called. It wants a check-in.",
+      "Sleeping is overrated anyway.",
+      "Night owls feel things hardest. Fact.",
+      "The quiet hours found you.",
+    ],
+    morning: [
+      "Good morning! How's the damage?",
+      "You woke up and chose feelings. Bold.",
+      "Rise and feel, bestie.",
+      "Morning check-in. Be honest.",
+      "The day is young. So are you (relatively).",
+    ],
+    afternoon: [
+      "Midday check-in. No lies.",
+      "How are we holding up, honestly?",
+      "Afternoon feelings? Absolutely valid.",
+      "Post-lunch emotional weather report.",
+      "The day isn't done with you yet.",
+    ],
+    evening: [
+      "Almost survived another one. How was it?",
+      "Day complete. Debrief time.",
+      "Evening feelings are the most honest.",
+      "The day is winding down. Spill.",
+      "End-of-day check-in. No filter.",
+    ],
+  };
+  let pool;
+  if (h < 5)       pool = pools.deep_night;
+  else if (h < 12) pool = pools.morning;
+  else if (h < 18) pool = pools.afternoon;
+  else             pool = pools.evening;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function initApp() {
   const now = new Date();
   calY = now.getFullYear(); calM = now.getMonth();
+
+  document.getElementById('logHero').textContent = getHeroGreeting();
 
   document.getElementById('hDate').textContent =
     now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
@@ -245,12 +303,14 @@ function initApp() {
   // Mood grid
   const grid = document.getElementById('moodGrid');
   MOODS.forEach(m => {
-    const el = document.createElement('div');
+    const el = document.createElement('button');
+    el.type = 'button';
     el.className = 'mood-btn';
     el.style.setProperty('--mc', m.color);
     el.dataset.id = m.id;
-    el.innerHTML = `<span class="m-emoji">${m.emoji}</span><span class="m-label">${m.label}</span>
-      <span class="m-check"><svg viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none"/></svg></span>`;
+    el.setAttribute('aria-pressed', 'false');
+    el.innerHTML = `<span class="m-icon" aria-hidden="true"><i class="fa-solid ${m.icon}"></i></span><span class="m-label">${m.label}</span>
+      <span class="m-check" aria-hidden="true"><svg viewBox="0 0 10 8"><polyline points="1,4 4,7 9,1" fill="none"/></svg></span>`;
     el.addEventListener('click', () => toggleMood(m.id, el));
     grid.appendChild(el);
   });
@@ -270,8 +330,8 @@ function initApp() {
   document.getElementById('trackTabs').addEventListener('click', e => {
     const t = e.target.dataset.tab; if (t) switchTrackTab(t);
   });
-  document.getElementById('calPrev').addEventListener('click', () => { calM--; if(calM<0){calM=11;calY--;} buildCal(); feather.replace(); });
-  document.getElementById('calNext').addEventListener('click', () => { calM++; if(calM>11){calM=0;calY++;} buildCal(); feather.replace(); });
+  document.getElementById('calPrev').addEventListener('click', () => { calM--; if(calM<0){calM=11;calY--;} buildCal(); });
+  document.getElementById('calNext').addEventListener('click', () => { calM++; if(calM>11){calM=0;calY++;} buildCal(); });
   document.getElementById('signOutRow').addEventListener('click', doSignOut);
 
   // Load saved theme
@@ -286,11 +346,13 @@ function initApp() {
     toggleTheme(this.checked);
   });
 
-  feather.replace();
-
   new ResizeObserver(() => {
     if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
   }).observe(document.getElementById('radarCanvas'));
+
+  document.fonts.load('900 1em "Font Awesome 6 Free"').then(() => {
+    if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
+  });
 
   // Entry animations deferred — fired in showApp after splash exits
 }
@@ -309,6 +371,7 @@ function toggleMood(id, el) {
 function select(id, el) {
   pickedMoods.set(id, 5);
   el.classList.add('selected');
+  el.setAttribute('aria-pressed', 'true');
   gsap.timeline()
     .to(el, { scale: 1.1, duration: 0.12, ease: 'power2.out' })
     .to(el, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
@@ -319,6 +382,7 @@ function select(id, el) {
 function deselect(id, el) {
   pickedMoods.delete(id);
   el.classList.remove('selected');
+  el.setAttribute('aria-pressed', 'false');
   removeIntRow(id);
   if (pickedMoods.size === 0) hideIntLabel();
 }
@@ -329,7 +393,7 @@ function showIntLabel() {
     gsap.set(lbl, { height: 0, opacity: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' });
     lbl.style.display = 'block';
     gsap.to(lbl, {
-      height: 'auto', opacity: 1, marginTop: 20, marginBottom: 10,
+      height: 'auto', opacity: 1, marginTop: 20, marginBottom: 12,
       duration: 0.25, ease: 'power3.out',
       clearProps: 'height,marginTop,marginBottom,overflow,opacity'
     });
@@ -359,11 +423,11 @@ function addIntRow(moodId) {
   row.style.setProperty('--mc', m.color);
   row.innerHTML = `
     <div class="ir-header">
-      <span class="ir-emoji">${m.emoji}</span>
+      <span class="ir-icon"><i class="fa-solid ${m.icon}"></i></span>
       <span class="ir-name">${m.label}</span>
       <span class="ir-val">${val}</span>
       <span class="ir-unit">/10</span>
-      <button class="ir-remove" aria-label="Remove"><i data-feather="x"></i></button>
+      <button class="ir-remove" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <input type="range" class="mood-slider" min="1" max="10" value="${val}">`;
 
@@ -382,17 +446,16 @@ function addIntRow(moodId) {
     deselect(moodId, document.querySelector(`.mood-btn[data-id="${moodId}"]`));
   });
 
-  gsap.set(row, { height: 0, opacity: 0, marginBottom: 0 });
+  gsap.set(row, { height: 0, opacity: 0 });
   document.getElementById('moodIntRows').appendChild(row);
-  feather.replace();
-  gsap.to(row, { height: 'auto', opacity: 1, marginBottom: 8, duration: 0.3, ease: 'power3.out', clearProps: 'height,marginBottom,opacity' });
+  gsap.to(row, { height: 'auto', opacity: 1, duration: 0.3, ease: 'power3.out', clearProps: 'height,opacity' });
 }
 
 function removeIntRow(moodId) {
   const row = document.getElementById('irow-' + moodId);
   if (!row) return;
   gsap.to(row, {
-    height: 0, opacity: 0, marginBottom: 0,
+    height: 0, opacity: 0,
     duration: 0.25, ease: 'power2.in', onComplete: () => row.remove()
   });
 }
@@ -426,9 +489,10 @@ async function doLog() {
   const firstMood = MOODS.find(m => m.id === moodsArr[0].id);
   const ring    = document.getElementById('successRing');
   const overlay = document.getElementById('successOverlay');
-  ring.textContent = moodsArr.length > 1
-    ? moodsArr.slice(0, 3).map(m => MOODS.find(x => x.id === m.id).emoji).join('')
-    : firstMood.emoji;
+  ring.innerHTML = moodsArr.length > 1
+    ? moodsArr.slice(0, 3).map(m => `<i class="fa-solid ${MOODS.find(x => x.id === m.id).icon}"></i>`).join('')
+    : `<i class="fa-solid ${firstMood.icon}"></i>`;
+  ring.style.color  = firstMood.color;
   ring.style.background = firstMood.color + '44';
   overlay.style.opacity = 1;
   overlay.style.pointerEvents = 'all';
@@ -521,13 +585,16 @@ function renderTrackPage() {
   if (curTrackTab === 'overview') renderOverview();
   if (curTrackTab === 'calendar') buildCal();
   if (curTrackTab === 'history')  renderHistory();
-  feather.replace();
 }
 
 function switchTrackTab(tab) {
   if (tab === curTrackTab) return;
   curTrackTab = tab;
-  document.querySelectorAll('.ttab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.ttab').forEach(t => {
+    const isActive = t.dataset.tab === tab;
+    t.classList.toggle('active', isActive);
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
   ['overview','calendar','history'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (v === tab) {
@@ -538,7 +605,7 @@ function switchTrackTab(tab) {
     }
   });
   if (tab === 'overview') renderOverview();
-  if (tab === 'calendar') { buildCal(); feather.replace(); }
+  if (tab === 'calendar') { buildCal(); }
   if (tab === 'history')  renderHistory();
 }
 
@@ -671,6 +738,8 @@ function renderRadar(progress = 1) {
     }
   });
 
+  const faReady = document.fonts.check('900 1em "Font Awesome 6 Free"');
+
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   MOODS.forEach((m, i) => {
@@ -678,9 +747,15 @@ function renderRadar(progress = 1) {
     const lR = R + 26;
     const lx = cx + lR * Math.cos(a);
     const ly = cy + lR * Math.sin(a);
-    ctx.font = '16px serif';
-    ctx.fillStyle = c.label;
-    ctx.fillText(m.emoji, lx, ly - 7);
+    if (faReady) {
+      ctx.font = '900 15px "Font Awesome 6 Free"';
+      ctx.fillStyle = avgs[m.id] > 0 ? m.color : c.hint;
+      ctx.fillText(m.unicode, lx, ly - 7);
+    } else {
+      ctx.font = '16px serif';
+      ctx.fillStyle = c.label;
+      ctx.fillText(m.emoji, lx, ly - 7);
+    }
     ctx.font = '600 9px -apple-system, sans-serif';
     ctx.fillStyle = avgs[m.id] > 0 ? m.color : c.hint;
     ctx.fillText(m.label, lx, ly + 7);
@@ -713,8 +788,8 @@ function renderWeekBars() {
     const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
   });
   days.forEach((d, i) => {
-    const ds   = d.toISOString().split('T')[0];
-    const dayE = entries.filter(e => e.ts.split('T')[0] === ds);
+    const ds   = localDateStr(d);
+    const dayE = entries.filter(e => localDateStr(e.ts) === ds);
     const col  = document.createElement('div');
     col.className = 'bar-col';
 
@@ -740,7 +815,7 @@ function renderWeekBars() {
 /* ── Distribution ── */
 function renderDistribution() {
   const wrap = document.getElementById('distWrap');
-  if (!entries.length) { wrap.innerHTML = '<div class="empty-state">No entries yet.</div>'; return; }
+  if (!entries.length) { wrap.innerHTML = '<div class="empty-state">Log your first mood to see patterns here.</div>'; return; }
 
   const counts = {};
   entries.forEach(e => e.moods.forEach(({ id }) => counts[id] = (counts[id] || 0) + 1));
@@ -753,7 +828,7 @@ function renderDistribution() {
     return `<div class="dist-row">
       <div class="dist-top">
         <div class="dist-name-wrap">
-          <span class="dist-emoji">${m.emoji}</span>
+          <span class="dist-icon" style="color:${m.color}"><i class="fa-solid ${m.icon}"></i></span>
           <span class="dist-name">${m.label}</span>
         </div>
         <span class="dist-count">${cnt} log${cnt > 1 ? 's' : ''} · ${pct}%</span>
@@ -782,15 +857,39 @@ function renderRecent() {
   list.innerHTML = recent.map(entryHTML).join('');
   gsap.fromTo(list.querySelectorAll('.entry-item'),
     { opacity: 0, y: 8 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.28 });
-  list.onclick = e => { const item = e.target.closest('.entry-item'); if (item) toggleEntry(item); };
+  list.onclick = e => {
+    const del = e.target.closest('.entry-delete');
+    if (del) { deleteEntry(del.dataset.docid); return; }
+    const item = e.target.closest('.entry-item');
+    if (item) toggleEntry(item);
+  };
+  list.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (e.target.closest('.entry-delete')) return;
+      const item = e.target.closest('.entry-item');
+      if (item) { e.preventDefault(); toggleEntry(item); }
+    }
+  };
 }
 
 /* ── History ── */
 function renderHistory() {
   const list = document.getElementById('historyList');
-  if (!entries.length) { list.innerHTML = '<div class="empty-state">No entries yet.</div>'; return; }
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">Your full history will appear here once you start logging.</div>'; return; }
   list.innerHTML = entries.map(entryHTML).join('');
-  list.onclick = e => { const item = e.target.closest('.entry-item'); if (item) toggleEntry(item); };
+  list.onclick = e => {
+    const del = e.target.closest('.entry-delete');
+    if (del) { deleteEntry(del.dataset.docid); return; }
+    const item = e.target.closest('.entry-item');
+    if (item) toggleEntry(item);
+  };
+  list.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      if (e.target.closest('.entry-delete')) return;
+      const item = e.target.closest('.entry-item');
+      if (item) { e.preventDefault(); toggleEntry(item); }
+    }
+  };
 }
 
 /* ── Entry HTML ── */
@@ -802,18 +901,21 @@ function entryHTML(e) {
   const chips      = e.moods.map(({ id, intensity }) => {
     const m = MOODS.find(m => m.id === id);
     if (!m) return '';
-    return `<span class="mood-chip" style="background:${m.color}20;color:${m.color}">${m.emoji} ${intensity}</span>`;
+    return `<span class="mood-chip" style="background:${m.color}20;color:${m.color}"><i class="fa-solid ${m.icon}"></i> ${intensity}</span>`;
   }).join('');
-  return `<div class="entry-item" style="border-left-color:${firstColor}">
+  return `<div class="entry-item" style="border-left-color:${firstColor}" tabindex="0" role="button" data-docid="${e._docId || ''}">
     <div class="entry-header">
       <div class="entry-header-left">
         <div class="entry-top-row">
           <div class="entry-chips">${chips}</div>
           <div class="entry-time">${t}</div>
         </div>
-        ${e.note ? `<div class="entry-note">${e.note}</div>` : ''}
+        ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ''}
       </div>
-      ${e.note ? `<svg class="entry-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>` : ''}
+      <div class="entry-actions">
+        ${e.note ? `<i class="entry-chevron fa-solid fa-chevron-down"></i>` : ''}
+        <button class="entry-delete" type="button" aria-label="Delete entry" data-docid="${e._docId || ''}"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
     </div>
   </div>`;
 }
@@ -822,6 +924,16 @@ function entryHTML(e) {
 function toggleEntry(item) {
   if (!item.querySelector('.entry-note')) return;
   item.classList.toggle('open');
+}
+
+/* ── Entry delete ── */
+async function deleteEntry(docId) {
+  try {
+    await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', docId));
+    showToast('Entry deleted.');
+  } catch {
+    showToast('Could not delete. Check your connection.');
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -841,7 +953,7 @@ function buildCal() {
   }
   for (let d = 1; d <= daysInM; d++) {
     const ds   = `${calY}-${String(calM + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayE = entries.filter(e => e.ts.split('T')[0] === ds);
+    const dayE = entries.filter(e => localDateStr(e.ts) === ds);
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
     cell.textContent = d;
@@ -872,7 +984,14 @@ function showDayDetail(ds, dayE, cell) {
   const label  = date.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
   const detail = document.getElementById('calDetail');
   detail.innerHTML = `<div class="section-label">${label}</div>
-    <div class="entry-list">${dayE.map(entryHTML).join('')}</div>`;
+    <div class="entry-list" id="calDetailList">${dayE.map(entryHTML).join('')}</div>`;
+  const calList = detail.querySelector('#calDetailList');
+  calList.onclick = e => {
+    const del = e.target.closest('.entry-delete');
+    if (del) { deleteEntry(del.dataset.docid); return; }
+    const item = e.target.closest('.entry-item');
+    if (item) toggleEntry(item);
+  };
   gsap.fromTo(detail, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 });
 }
 
@@ -884,8 +1003,8 @@ function updateStreak() {
   let streak = 0;
   const d = new Date();
   while (true) {
-    const ds = d.toISOString().split('T')[0];
-    if (entries.some(e => e.ts.split('T')[0] === ds)) { streak++; d.setDate(d.getDate() - 1); }
+    const ds = localDateStr(d);
+    if (entries.some(e => localDateStr(e.ts) === ds)) { streak++; d.setDate(d.getDate() - 1); }
     else break;
   }
   document.getElementById('hStreak').textContent = streak > 1 ? `🔥 ${streak} day streak` : '';
@@ -910,12 +1029,11 @@ function applyThemeIcon(isLight) {
   const wrap = document.getElementById('themeIconWrap');
   if (isLight) {
     wrap.style.background = '#FFD93D33';
-    wrap.innerHTML = '<i data-feather="sun" style="color:#FFD93D"></i>';
+    wrap.innerHTML = '<i class="fa-solid fa-sun" style="color:#FFD93D"></i>';
   } else {
     wrap.style.background = '#A66CFF33';
-    wrap.innerHTML = '<i data-feather="moon" style="color:#A66CFF"></i>';
+    wrap.innerHTML = '<i class="fa-solid fa-moon" style="color:#A66CFF"></i>';
   }
-  feather.replace();
 }
 
 function toggleTheme(isLight) {
@@ -936,6 +1054,9 @@ function toggleTheme(isLight) {
    they work before the app is ever initialized
 ══════════════════════════════════════════════ */
 document.getElementById('loginBtn').addEventListener('click', doSignIn);
+document.getElementById('loginEmail').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginPass').focus();
+});
 document.getElementById('loginPass').addEventListener('keydown', e => {
   if (e.key === 'Enter') doSignIn();
 });

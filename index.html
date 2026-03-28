@@ -14,9 +14,9 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="moodex.css?v=20">
+  <link rel="stylesheet" href="moodex.css?v=23">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 </head>
 <body>
@@ -31,8 +31,10 @@
   <div class="login-card">
     <div class="logo">Moodex</div>
     <p class="login-sub">Track your emotional journey</p>
+    <label class="sr-only" for="loginEmail">Email address</label>
     <input class="login-input" type="email" id="loginEmail"
       placeholder="Email" autocomplete="email" inputmode="email">
+    <label class="sr-only" for="loginPass">Password</label>
     <input class="login-input" type="password" id="loginPass"
       placeholder="Password" autocomplete="current-password">
     <div class="login-err" id="loginErr"></div>
@@ -58,7 +60,7 @@
     <!-- ════ LOG PAGE ════ -->
     <div class="page" id="page-log">
 
-      <div class="section-label">How are you feeling?</div>
+      <div class="log-hero" id="logHero"></div>
       <div class="mood-grid" id="moodGrid"></div>
 
       <div class="section-label" id="intLabel" style="display:none">Intensities</div>
@@ -70,7 +72,7 @@
           placeholder="What's on your mind? (optional)" maxlength="300" rows="4"></textarea>
         <div class="journal-footer">
           <span class="char-count"><span id="cCount">0</span> / 300</span>
-          <i data-feather="edit-2" style="width:14px;height:14px;color:var(--muted)"></i>
+          <i class="fa-solid fa-pen" style="font-size:13px;color:var(--muted)"></i>
         </div>
       </div>
 
@@ -86,7 +88,7 @@
         <div class="setting-row">
           <div class="setting-left">
             <div class="setting-icon" id="themeIconWrap">
-              <i data-feather="moon" style="color:#A66CFF"></i>
+              <i class="fa-solid fa-moon" style="color:#A66CFF"></i>
             </div>
             <div>
               <div class="setting-title">Theme</div>
@@ -102,17 +104,17 @@
 
       <div class="section-label">Account</div>
       <div class="setting-card">
-        <div class="setting-row" id="signOutRow">
+        <button class="setting-row" id="signOutRow" type="button">
           <div class="setting-left">
             <div class="setting-icon" style="background:#FF6B6B22">
-              <i data-feather="log-out" style="color:#FF6B6B"></i>
+              <i class="fa-solid fa-right-from-bracket" style="color:#FF6B6B"></i>
             </div>
             <div>
               <div class="setting-title">Sign Out</div>
               <div class="setting-sub" id="userEmailSub">—</div>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       <div class="settings-about">
@@ -125,10 +127,10 @@
     <!-- ════ TRACK PAGE ════ -->
     <div class="page hidden" id="page-track">
 
-      <div class="track-tabs" id="trackTabs">
-        <div class="ttab active" data-tab="overview">Overview</div>
-        <div class="ttab" data-tab="calendar">Calendar</div>
-        <div class="ttab" data-tab="history">History</div>
+      <div class="track-tabs" id="trackTabs" role="tablist" aria-label="Track views">
+        <button class="ttab active" data-tab="overview" type="button" role="tab" aria-selected="true">Overview</button>
+        <button class="ttab" data-tab="calendar" type="button" role="tab" aria-selected="false">Calendar</button>
+        <button class="ttab" data-tab="history" type="button" role="tab" aria-selected="false">History</button>
       </div>
 
       <!-- Overview -->
@@ -155,9 +157,9 @@
       <div id="view-calendar" style="display:none">
         <div class="cal-card">
           <div class="cal-head">
-            <button class="cal-arrow" id="calPrev"><i data-feather="chevron-left"></i></button>
+            <button class="cal-arrow" id="calPrev"><i class="fa-solid fa-chevron-left"></i></button>
             <div class="cal-month" id="calTitle"></div>
-            <button class="cal-arrow" id="calNext"><i data-feather="chevron-right"></i></button>
+            <button class="cal-arrow" id="calNext"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
           <div class="cal-wdays">
             <div class="cal-wd">Su</div><div class="cal-wd">Mo</div><div class="cal-wd">Tu</div>
@@ -180,7 +182,7 @@
 
   </div><!-- /content-area -->
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="success-overlay" id="successOverlay">
     <div class="success-ring" id="successRing"></div>
   </div>
@@ -189,13 +191,13 @@
   <div id="navWrap" style="display:none">
     <div class="fab-nav" id="fabNav">
       <div class="fab-menu" id="fabMenu">
-        <button class="fab-menu-item" id="nav-log"><i data-feather="edit-3"></i><span>Log</span></button>
-        <button class="fab-menu-item" id="nav-track"><i data-feather="activity"></i><span>Track</span></button>
-        <button class="fab-menu-item" id="nav-settings"><i data-feather="settings"></i><span>Settings</span></button>
+        <button class="fab-menu-item" id="nav-log"><i class="fa-solid fa-pen-to-square"></i><span>Log</span></button>
+        <button class="fab-menu-item" id="nav-track"><i class="fa-solid fa-chart-line"></i><span>Track</span></button>
+        <button class="fab-menu-item" id="nav-settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
       </div>
       <button class="fab-btn" id="fabBtn" aria-label="Open navigation">
-        <i class="fab-icon fab-icon-menu" data-feather="menu"></i>
-        <i class="fab-icon fab-icon-close" data-feather="x"></i>
+        <i class="fab-icon fab-icon-menu fa-solid fa-bars"></i>
+        <i class="fab-icon fab-icon-close fa-solid fa-xmark"></i>
       </button>
     </div>
   </div>

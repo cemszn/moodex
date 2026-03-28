@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Moodex</title>
   <link rel="stylesheet" href="moodex.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -36,7 +36,7 @@
           placeholder="What's on your mind? (optional)" maxlength="300" rows="4"></textarea>
         <div class="journal-footer">
           <span class="char-count"><span id="cCount">0</span> / 300</span>
-          <i data-feather="edit-2" style="width:14px;height:14px;color:var(--muted)"></i>
+          <i class="fa-solid fa-pen" style="width:14px;height:14px;color:var(--muted)"></i>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
         <div class="setting-row">
           <div class="setting-left">
             <div class="setting-icon" id="themeIconWrap">
-              <i data-feather="moon" style="color:#A66CFF"></i>
+              <i class="fa-solid fa-moon" style="color:#A66CFF"></i>
             </div>
             <div>
               <div class="setting-title">Theme</div>
@@ -105,9 +105,9 @@
       <div id="view-calendar" style="display:none">
         <div class="cal-card">
           <div class="cal-head">
-            <button class="cal-arrow" id="calPrev"><i data-feather="chevron-left"></i></button>
+            <button class="cal-arrow" id="calPrev"><i class="fa-solid fa-chevron-left"></i></button>
             <div class="cal-month" id="calTitle"></div>
-            <button class="cal-arrow" id="calNext"><i data-feather="chevron-right"></i></button>
+            <button class="cal-arrow" id="calNext"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
           <div class="cal-wdays">
             <div class="cal-wd">Su</div><div class="cal-wd">Mo</div><div class="cal-wd">Tu</div>
@@ -129,9 +129,9 @@
   </div><!-- /pages -->
 
   <nav class="bottom-nav">
-    <button class="nav-item active" id="nav-log"><i data-feather="edit-3"></i> Log</button>
-    <button class="nav-item" id="nav-track"><i data-feather="activity"></i> Track</button>
-    <button class="nav-item" id="nav-settings"><i data-feather="settings"></i> Settings</button>
+    <button class="nav-item active" id="nav-log"><i class="fa-solid fa-pen-to-square"></i> Log</button>
+    <button class="nav-item" id="nav-track"><i class="fa-solid fa-chart-line"></i> Track</button>
+    <button class="nav-item" id="nav-settings"><i class="fa-solid fa-gear"></i> Settings</button>
   </nav>
 
   <div class="toast" id="toast"></div>
