@@ -470,8 +470,8 @@ function openFab() {
   nav.classList.add('open');
   items.forEach(el => { el.style.pointerEvents = 'all'; });
   gsap.fromTo(items,
-    { opacity: 0, y: 18, scale: 0.85 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: 'back.out(1.6)', stagger: 0.07 }
+    { opacity: 0, y: -10, scale: 0.92 },
+    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: 'power2.out', stagger: 0.06 }
   );
   gsap.to('#fabBtn', { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1 });
 }
@@ -482,8 +482,8 @@ function closeFab() {
   const nav = document.getElementById('fabNav');
   const items = document.querySelectorAll('.fab-menu-item');
   gsap.to(items, {
-    opacity: 0, y: 14, scale: 0.88, duration: 0.18, ease: 'power2.in',
-    stagger: { each: 0.05, from: 'end' },
+    opacity: 0, y: -8, scale: 0.92, duration: 0.16, ease: 'power2.in',
+    stagger: { each: 0.04, from: 'end' },
     onComplete: () => {
       nav.classList.remove('open');
       items.forEach(el => { el.style.pointerEvents = 'none'; });
