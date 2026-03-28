@@ -396,26 +396,20 @@ function deselect(id, el) {
   pickedMoods.delete(id);
   el.classList.remove('selected');
   el.setAttribute('aria-pressed', 'false');
+  if (!reducedMotion) {
+    gsap.killTweensOf(el, 'scale');
+    gsap.fromTo(el, { scale: 0.93 }, { scale: 1, duration: 0.18, ease: 'power2.out' });
+  }
   removeIntRow(id);
   if (pickedMoods.size === 0) hideIntLabel();
 }
 
 function showIntLabel() {
-  const lbl = document.getElementById('intLabel');
-  if (lbl.style.display === 'none') {
-    lbl.style.display = 'block';
-    if (!reducedMotion)
-      gsap.fromTo(lbl, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out', clearProps: 'all' });
-  }
+  document.getElementById('intSection').classList.add('int-open');
 }
 
 function hideIntLabel() {
-  const lbl = document.getElementById('intLabel');
-  if (reducedMotion) { lbl.style.display = 'none'; return; }
-  gsap.to(lbl, {
-    opacity: 0, y: -6, duration: 0.18, ease: 'power2.in',
-    onComplete: () => { lbl.style.display = 'none'; gsap.set(lbl, { clearProps: 'all' }); }
-  });
+  document.getElementById('intSection').classList.remove('int-open');
 }
 
 function addIntRow(moodId) {
@@ -488,12 +482,26 @@ async function doLog() {
     ts: new Date().toISOString(),
   };
 
+  const btn = document.getElementById('logBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const loadPulse = reducedMotion ? null : gsap.to(btn, { opacity: 0.65, duration: 0.5, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+
   try {
     await addDoc(collection(db, 'users', currentUser.uid, 'entries'), entry);
   } catch {
+    loadPulse?.kill();
+    gsap.set(btn, { opacity: 1 });
+    btn.disabled = false;
+    btn.textContent = 'Log Mood';
     showToast('Failed to save. Check your connection.');
     return;
   }
+
+  loadPulse?.kill();
+  gsap.set(btn, { opacity: 1 });
+  btn.disabled = false;
+  btn.textContent = 'Log Mood';
 
   // Success animation
   const firstMood = MOODS.find(m => m.id === moodsArr[0].id);
@@ -868,8 +876,14 @@ function renderDistribution() {
   }).join('');
 
   requestAnimationFrame(() => {
-    wrap.querySelectorAll('.dist-fill').forEach(f =>
-      gsap.to(f, { width: f.dataset.w, duration: 0.65, ease: 'power2.out' })
+    if (!reducedMotion) {
+      gsap.fromTo(wrap.querySelectorAll('.dist-row'),
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, stagger: 0.07, duration: 0.25, ease: 'power2.out', clearProps: 'opacity,transform' }
+      );
+    }
+    wrap.querySelectorAll('.dist-fill').forEach((f, i) =>
+      gsap.to(f, { width: f.dataset.w, duration: 0.65, ease: 'power2.out', delay: reducedMotion ? 0 : i * 0.07 + 0.1 })
     );
   });
 }
@@ -905,6 +919,10 @@ function renderHistory() {
   const list = document.getElementById('historyList');
   if (!entries.length) { list.innerHTML = '<div class="empty-state">Your full history will appear here once you start logging.</div>'; return; }
   list.innerHTML = entries.map(entryHTML).join('');
+  if (!reducedMotion) {
+    gsap.fromTo(list.querySelectorAll('.entry-item'),
+      { opacity: 0, y: 8 }, { opacity: 1, y: 0, stagger: 0.05, duration: 0.28, ease: 'power2.out', clearProps: 'opacity,transform' });
+  }
   list.onclick = e => {
     const del = e.target.closest('.entry-delete');
     if (del) { deleteEntry(del.dataset.docid); return; }
@@ -956,6 +974,15 @@ function toggleEntry(item) {
 
 /* ── Entry delete ── */
 async function deleteEntry(docId) {
+  const item = document.querySelector(`.entry-item[data-docid="${docId}"]`);
+  if (item && !reducedMotion) {
+    const h = item.offsetHeight;
+    await new Promise(resolve =>
+      gsap.timeline()
+        .to(item, { opacity: 0, x: 18, duration: 0.18, ease: 'power2.in' })
+        .to(item, { height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0, duration: 0.18, ease: 'power2.in', onComplete: resolve })
+    );
+  }
   try {
     await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', docId));
     showToast('Entry deleted.');
@@ -1009,6 +1036,13 @@ function buildCal() {
       }
     }
     grid.appendChild(cell);
+  }
+
+  if (!reducedMotion) {
+    gsap.fromTo(grid.querySelectorAll('.cal-cell:not(.empty)'),
+      { opacity: 0, scale: 0.82 },
+      { opacity: 1, scale: 1, stagger: { each: 0.012, from: 'start' }, duration: 0.22, ease: 'power2.out', clearProps: 'opacity,transform' }
+    );
   }
 }
 

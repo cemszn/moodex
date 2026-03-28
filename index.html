@@ -14,7 +14,10 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="moodex.css?v=25">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="moodex.css?v=26">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" media="print" onload="this.media='all'" crossorigin="anonymous">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous"></noscript>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
@@ -64,8 +67,12 @@
       <div class="log-hero" id="logHero"></div>
       <div class="mood-grid" id="moodGrid"></div>
 
-      <div class="section-label" id="intLabel" style="display:none">Intensities</div>
-      <div id="moodIntRows"></div>
+      <div id="intSection">
+        <div id="intSectionInner">
+          <div class="section-label">Intensities</div>
+          <div id="moodIntRows"></div>
+        </div>
+      </div>
 
       <div class="section-label">Journal Entry</div>
       <div class="journal-card">

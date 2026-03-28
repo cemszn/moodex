@@ -47,8 +47,9 @@ body {
   display: flex; flex-direction: column;
   height: 100dvh; overflow: hidden;
   position: relative; /* positioning context for abs nav */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg); color: var(--text);
+  background-image: radial-gradient(ellipse 90% 45% at 50% 0%, rgba(255,146,43,0.055) 0%, transparent 70%);
 }
 
 #app {
@@ -65,7 +66,7 @@ body {
   padding: max(18px, env(safe-area-inset-top, 0px)) 20px 12px;
 }
 .logo {
-  font-size: 24px; font-weight: 900; letter-spacing: -1px;
+  font-size: 24px; font-weight: 700; letter-spacing: -0.5px;
   background: linear-gradient(120deg, #FF6B6B 0%, #FFD93D 35%, #6BCB77 65%, #6C9BCF 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
@@ -88,9 +89,9 @@ body {
 
 /* ── Log hero greeting ── */
 .log-hero {
-  font-size: 26px; font-weight: 900; letter-spacing: -0.4px;
-  line-height: 1.2; color: var(--text);
-  margin: 14px 2px 16px;
+  font-size: 36px; font-weight: 700; letter-spacing: -1px;
+  line-height: 1.12; color: var(--text);
+  margin: 14px 2px 20px;
 }
 
 /* ── Shared ── */
@@ -102,19 +103,19 @@ body {
 /* ── Mood Grid ── */
 .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-bottom: 4px; }
 .mood-btn {
-  background: var(--surface); border: 2px solid transparent;
+  background: color-mix(in srgb, var(--mc) 7%, var(--surface)); border: 2px solid transparent;
   border-radius: var(--radius); padding: 13px 6px 11px;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
   cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
   transition: border-color 0.18s, background 0.18s, transform 0.12s; position: relative;
   font-family: inherit; appearance: none; -webkit-appearance: none;
 }
-.mood-btn:hover:not(.selected) { background: color-mix(in srgb, var(--text) 6%, var(--surface)); }
+.mood-btn:hover:not(.selected) { background: color-mix(in srgb, var(--mc) 14%, var(--surface)); }
 .mood-btn.selected:hover { background: color-mix(in srgb, var(--mc) 20%, var(--surface)); }
 .mood-btn:active { transform: scale(0.94); }
-.mood-btn .m-icon { font-size: 26px; line-height: 1; color: var(--muted); transition: color 0.18s; }
+.mood-btn .m-icon { font-size: 26px; line-height: 1; color: color-mix(in srgb, var(--mc) 55%, var(--muted)); transition: color 0.18s; }
 .mood-btn.selected .m-icon { color: var(--mc); }
-.mood-btn .m-label { font-size: 10.5px; font-weight: 600; color: var(--muted); transition: color 0.18s; }
+.mood-btn .m-label { font-size: 10.5px; font-weight: 600; color: color-mix(in srgb, var(--mc) 35%, var(--muted)); transition: color 0.18s; }
 .mood-btn .m-check {
   position: absolute; top: 6px; right: 6px; width: 16px; height: 16px;
   border-radius: 50%; background: var(--mc); display: flex; align-items: center;
@@ -188,11 +189,11 @@ body {
   border: none; font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
   color: #0e0e16; cursor: pointer; font-family: inherit;
   background: linear-gradient(130deg, #FFD93D 0%, #FF922B 60%, #FF6B6B 100%);
-  box-shadow: 0 6px 24px rgba(255, 146, 43, 0.35);
+  box-shadow: 0 8px 32px rgba(255, 146, 43, 0.45);
   -webkit-tap-highlight-color: transparent; user-select: none;
   transition: box-shadow 0.2s, transform 0.15s, opacity 0.2s;
 }
-.log-btn:hover { box-shadow: 0 10px 36px rgba(255, 146, 43, 0.5); transform: translateY(-1px); }
+.log-btn:hover { box-shadow: 0 14px 48px rgba(255, 146, 43, 0.62); transform: translateY(-2px); }
 .log-btn:active { transform: translateY(0) scale(0.98); box-shadow: 0 3px 14px rgba(255, 146, 43, 0.3); }
 .log-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; pointer-events: none; }
 
@@ -219,6 +220,21 @@ body {
   font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px;
 }
 #radarCanvas { width: 100%; display: block; }
+
+/* ── Intensity section wrapper ── */
+#intSection {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+}
+#intSection.int-open { grid-template-rows: 1fr; }
+#intSectionInner { overflow: hidden; }
+
+/* ── Overview two-column layout ── */
+#view-overview {
+  display: flex;
+  flex-direction: column;
+}
 
 /* ── Week Chart ── */
 .chart-card {
@@ -556,6 +572,13 @@ body.light .login-input:focus { border-color: rgba(255, 146, 43, 0.7); }
   .int-row { padding: 16px 20px 18px; }
 
   .radar-card, .chart-card, .cal-card { padding: 20px; }
+
+  #view-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
 }
 
 /* ══════════════════════════════════════════════
