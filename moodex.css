@@ -39,20 +39,21 @@ body {
   display: flex; flex-direction: column;
   flex: 1; min-height: 0;
   max-width: 480px; margin: 0 auto; width: 100%;
+  position: relative;
 }
 
 /* ── Header ── */
 .app-header {
   flex-shrink: 0; display: flex; align-items: center;
   justify-content: space-between;
-  padding: max(18px, env(safe-area-inset-top, 0px)) 72px 12px 20px; /* right gap for FAB */
+  padding: max(18px, env(safe-area-inset-top, 0px)) 20px 12px;
 }
 .logo {
   font-size: 24px; font-weight: 900; letter-spacing: -1px;
   background: linear-gradient(120deg, #FF6B6B 0%, #FFD93D 35%, #6BCB77 65%, #6C9BCF 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; padding-right: 52px; }
 .header-date { font-size: 12px; color: var(--muted); font-weight: 500; }
 .streak { font-size: 11px; color: #FFD93D; font-weight: 700; }
 
@@ -272,23 +273,20 @@ body {
 }
 .success-ring { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; transform: scale(0); }
 
-/* ── Nav Wrapper — top-right on mobile, absolute within body ── */
-.nav-wrap {
+/* ── Nav Wrapper — absolute within #app, tracks content width ── */
+#navWrap {
   position: absolute;
-  top: 0; right: 0;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: 16px;
   z-index: 200;
   pointer-events: none;
-  display: flex;
-  background: transparent;
 }
 
 /* ── FAB Nav ── */
 .fab-nav {
   position: relative;
   display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: max(14px, env(safe-area-inset-top, 0px)) 16px 0 0;
+  align-items: center;
 }
 
 .nav-brand { display: none; }
@@ -339,7 +337,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   transition: opacity 0.2s ease, transform 0.25s ease;
 }
-.fab-icon svg { width: 18px; height: 18px; stroke: white; color: white; }
+.fab-icon svg { width: 18px; height: 18px; stroke: #0e0e16; color: #0e0e16; }
 .fab-icon-close { opacity: 0; transform: rotate(-45deg) scale(0.7); }
 .fab-nav.open .fab-icon-menu { opacity: 0; transform: rotate(45deg) scale(0.7); }
 .fab-nav.open .fab-icon-close { opacity: 1; transform: rotate(0deg) scale(1); }
@@ -356,6 +354,7 @@ body.light {
   --muted: #9090b0;
   --track-dim: rgba(240, 240, 248, 0.72);
 }
+body.light .streak { color: #E85D00; }
 
 body.light .fab-menu-item {
   background: rgba(255,255,255,0.95);
@@ -494,105 +493,71 @@ body.light .login-input:focus { border-color: rgba(0,0,0,0.22); }
 /* ══════════════════════════════════════════════
    DESKTOP — computer + iPad Air landscape (1024px+)
 ══════════════════════════════════════════════ */
-@media (min-width: 1024px) {
-  #app {
-    max-width: calc(1100px - 220px);
-    margin-left: 220px;
-    margin-right: auto;
+/* ══════════════════════════════════════════════
+   WIDE — tablet / desktop (768px+): bottom pill
+══════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  /* Nav moves to fixed bottom pill */
+  #navWrap {
+    position: fixed;
+    bottom: 24px; left: 0; right: 0; top: auto;
+    display: flex !important;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    pointer-events: none;
   }
 
-  /* ── Sidebar — nav-wrap becomes a fixed left panel ── */
-  .nav-wrap {
-    position: fixed;
-    top: 0; left: 0;
-    width: 220px; height: 100%;
-    padding: 0;
-    pointer-events: all;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    transform: translateZ(0);
-  }
+  .header-right { padding-right: 0; }
 
   .fab-nav {
-    flex-direction: column;
-    align-items: stretch;
-    height: 100%;
-    padding: 0;
-    justify-content: flex-start;
-  }
-
-  .nav-brand {
     display: flex;
     align-items: center;
-    padding: 26px 20px 22px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    margin-bottom: 8px;
+    pointer-events: all;
   }
-  .nav-brand .logo { font-size: 22px; }
 
-  /* Sidebar — items always visible */
+  /* Items visible in a horizontal pill */
   .fab-menu {
     position: static;
     transform: none;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
     pointer-events: all;
-    padding: 0;
-    gap: 0;
-    bottom: auto; left: auto;
+    gap: 4px;
+    top: auto; right: auto;
+    padding: 6px;
+    background: rgba(24, 24, 36, 0.94);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
   }
 
   .fab-menu-item {
     opacity: 1 !important;
     transform: none !important;
     pointer-events: all !important;
-    border-radius: 10px;
-    margin: 2px 12px;
-    padding: 10px 14px;
+    padding: 10px 22px;
+    border-radius: 20px;
     background: transparent !important;
-    box-shadow: none !important;
     border: none !important;
+    box-shadow: none !important;
     color: var(--muted);
-    font-size: 13.5px;
-    justify-content: flex-start;
-    gap: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    gap: 8px;
     white-space: nowrap;
-    transition: background 0.15s, color 0.15s;
+    transition: background 0.2s, color 0.2s;
   }
-  .fab-menu-item svg { opacity: 0.55; transition: opacity 0.15s; }
+  .fab-menu-item svg { width: 17px; height: 17px; opacity: 1; }
   .fab-menu-item:hover { background: var(--surface2) !important; color: var(--text); }
-  .fab-menu-item:hover svg { opacity: 1; }
   .fab-menu-item.active { background: var(--surface2) !important; color: var(--text); }
-  .fab-menu-item.active svg { opacity: 1; }
 
   .fab-btn { display: none; }
 
-  /* ── Header (content side) ── */
-  .app-header .logo { display: none; }
-  .app-header { justify-content: flex-end; padding: 20px 40px 16px; border-bottom: 1px solid var(--border); }
-
-  /* ── Content area ── */
-  .content-area { flex: 1; min-width: 0; }
-
-  .page { padding: 8px 40px 40px; }
-
-  /* ── Track — 2-column overview split ── */
-  #view-overview {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 24px;
-    align-items: start;
+  body.light .fab-menu {
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   }
-
-  .overview-col { min-width: 0; }
-
-  .radar-card, .chart-card { margin-top: 16px; }
-
-  .toast { bottom: 28px; }
-
-  body.light .fab-menu-item { background: transparent !important; }
 }

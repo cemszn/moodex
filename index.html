@@ -14,7 +14,7 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon-180.png">
 
-  <link rel="stylesheet" href="moodex.css?v=16">
+  <link rel="stylesheet" href="moodex.css?v=20">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://unpkg.com/feather-icons/dist/feather.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
@@ -185,23 +185,23 @@
     <div class="success-ring" id="successRing"></div>
   </div>
 
+  <!-- NAV — absolute within #app so it respects content max-width -->
+  <div id="navWrap" style="display:none">
+    <div class="fab-nav" id="fabNav">
+      <div class="fab-menu" id="fabMenu">
+        <button class="fab-menu-item" id="nav-log"><i data-feather="edit-3"></i><span>Log</span></button>
+        <button class="fab-menu-item" id="nav-track"><i data-feather="activity"></i><span>Track</span></button>
+        <button class="fab-menu-item" id="nav-settings"><i data-feather="settings"></i><span>Settings</span></button>
+      </div>
+      <button class="fab-btn" id="fabBtn" aria-label="Open navigation">
+        <i class="fab-icon fab-icon-menu" data-feather="menu"></i>
+        <i class="fab-icon fab-icon-close" data-feather="x"></i>
+      </button>
+    </div>
+  </div>
+
 </div><!-- /app -->
 
-<!-- ════ NAV ════ -->
-<div class="nav-wrap" id="navWrap" style="display:none">
-  <div class="fab-nav" id="fabNav">
-    <div class="nav-brand"><span class="logo">Moodex</span></div>
-    <div class="fab-menu" id="fabMenu">
-      <button class="fab-menu-item" id="nav-log"><i data-feather="edit-3"></i><span>Log</span></button>
-      <button class="fab-menu-item" id="nav-track"><i data-feather="activity"></i><span>Track</span></button>
-      <button class="fab-menu-item" id="nav-settings"><i data-feather="settings"></i><span>Settings</span></button>
-    </div>
-    <button class="fab-btn" id="fabBtn" aria-label="Open navigation">
-      <i class="fab-icon fab-icon-menu" data-feather="menu"></i>
-      <i class="fab-icon fab-icon-close" data-feather="x"></i>
-    </button>
-  </div>
-</div>
 
 <script>
   if ('serviceWorker' in navigator) {
