@@ -263,14 +263,25 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 }
 .success-ring { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; transform: scale(0); }
 
-/* ── Bottom Nav ── */
+/* ── Nav Wrapper (handles positioning + safe area) ── */
+.nav-wrap {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 200;
+  pointer-events: none;
+  transform: translateZ(0); /* GPU layer — prevents iOS 17 fixed-position drift */
+}
+
+/* ── Bottom Nav pill ── */
 .bottom-nav {
-  position: fixed; bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px)); left: 50%; transform: translateX(-50%);
+  margin: 8px auto;
   width: calc(min(100vw, 480px) - 32px);
   background: rgba(24, 24, 36, 0.94); backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border);
   border-radius: 26px; height: 60px; display: flex; padding: 5px; gap: 5px;
-  z-index: 200; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  pointer-events: all;
 }
 .nav-brand { display: none; }
 .nav-item {
@@ -433,18 +444,27 @@ body.light .login-input:focus { border-color: rgba(0,0,0,0.22); }
 ══════════════════════════════════════════════ */
 @media (min-width: 1024px) {
   #app {
-    flex-direction: row;
-    max-width: 1100px;
+    max-width: calc(1100px - 220px);
+    margin-left: 220px;
+    margin-right: auto;
     height: 100dvh;
   }
 
-  /* ── Sidebar ── */
+  /* ── Sidebar — nav-wrap becomes a fixed left panel ── */
+  .nav-wrap {
+    bottom: auto; right: auto;
+    top: 0; left: 0;
+    width: 220px; height: 100%;
+    padding: 0;
+    pointer-events: all;
+    transform: translateZ(0);
+  }
+
   .bottom-nav {
-    position: relative;
-    bottom: auto; left: auto; transform: none;
-    width: 220px; flex-shrink: 0; height: 100%;
+    margin: 0;
+    width: 220px; height: 100%;
     flex-direction: column;
-    align-items: stretch;   /* items stretch to sidebar width; margins create inset */
+    align-items: stretch;
     justify-content: flex-start;
     padding: 0;
     gap: 0;
@@ -454,7 +474,6 @@ body.light .login-input:focus { border-color: rgba(0,0,0,0.22); }
     background: var(--surface);
     backdrop-filter: none; -webkit-backdrop-filter: none;
     box-shadow: none;
-    z-index: auto;
     overflow: hidden;
   }
 

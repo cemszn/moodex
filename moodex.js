@@ -106,6 +106,7 @@ function hideSplash(revealFn) {
 function showLogin() {
   hideSplash(() => {
     document.getElementById('app').style.display = 'none';
+    document.getElementById('navWrap').style.display = 'none';
     document.getElementById('loginErr').textContent = '';
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
@@ -125,6 +126,7 @@ function showApp(user) {
   hideSplash(() => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
+    document.getElementById('navWrap').style.display = 'block';
     document.getElementById('userEmailSub').textContent = user.email;
 
     gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
@@ -895,4 +897,19 @@ function toggleTheme(isLight) {
 document.getElementById('loginBtn').addEventListener('click', doSignIn);
 document.getElementById('loginPass').addEventListener('keydown', e => {
   if (e.key === 'Enter') doSignIn();
+});
+
+/* ══════════════════════════════════════════════
+   iOS 17 PWA FIX — position:fixed elements drift
+   upward after app is backgrounded/resumed due to
+   a ghost Safari toolbar offset. Force a reflow
+   on the nav wrapper to reset its position.
+══════════════════════════════════════════════ */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  const wrap = document.getElementById('navWrap');
+  if (!wrap || wrap.style.display === 'none') return;
+  wrap.style.display = 'none';
+  wrap.offsetHeight; // force reflow
+  wrap.style.display = 'block';
 });
