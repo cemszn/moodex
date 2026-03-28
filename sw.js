@@ -1,7 +1,7 @@
-const CACHE = 'moodex-v8';
+const CACHE = 'moodex-v9';
 const ASSETS = [
   './',
-  './moodex.css?v=7',
+  './moodex.css?v=8',
   './moodex.js',
   './manifest.json',
   './icon.svg',
