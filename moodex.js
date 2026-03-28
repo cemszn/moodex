@@ -66,6 +66,9 @@ let curPage      = 'log';
 let curTrackTab  = 'overview';
 let calY, calM;
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let _radarTween = null;
+
 /* ══════════════════════════════════════════════
    SPLASH
 ══════════════════════════════════════════════ */
@@ -93,6 +96,7 @@ function _maybeReveal() {
 function _startZoom() {
   if (_zoomStarted) return;
   _zoomStarted = true;
+  if (reducedMotion) { _zoomDone = true; _maybeReveal(); return; }
   gsap.to(document.getElementById('splash-lottie'), {
     scale: 12, opacity: 0, duration: 0.55, ease: 'power2.in',
     onComplete: () => { _zoomDone = true; _maybeReveal(); }
@@ -142,9 +146,11 @@ function showApp(user) {
     document.getElementById('navWrap').style.display = '';
     document.getElementById('userEmailSub').textContent = user.email;
 
-    gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
-    gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-    gsap.from('.journal-card, .log-btn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out' });
+    if (!reducedMotion) {
+      gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
+      gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+      gsap.from('.journal-card, #logBtn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out', clearProps: 'all' });
+    }
   });
 }
 
@@ -346,8 +352,12 @@ function initApp() {
     toggleTheme(this.checked);
   });
 
+  let _radarResizeTimer;
   new ResizeObserver(() => {
-    if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
+    clearTimeout(_radarResizeTimer);
+    _radarResizeTimer = setTimeout(() => {
+      if (curPage === 'track' && curTrackTab === 'overview') renderRadar();
+    }, 100);
   }).observe(document.getElementById('radarCanvas'));
 
   document.fonts.load('900 1em "Font Awesome 6 Free"').then(() => {
@@ -372,9 +382,12 @@ function select(id, el) {
   pickedMoods.set(id, 5);
   el.classList.add('selected');
   el.setAttribute('aria-pressed', 'true');
-  gsap.timeline()
-    .to(el, { scale: 1.1, duration: 0.12, ease: 'power2.out' })
-    .to(el, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+  if (!reducedMotion) {
+    gsap.killTweensOf(el, 'scale');
+    gsap.timeline()
+      .to(el, { scale: 1.1, duration: 0.12, ease: 'power2.out' })
+      .to(el, { scale: 1, duration: 0.2, ease: 'back.out(2)' });
+  }
   addIntRow(id);
   showIntLabel();
 }
@@ -390,25 +403,18 @@ function deselect(id, el) {
 function showIntLabel() {
   const lbl = document.getElementById('intLabel');
   if (lbl.style.display === 'none') {
-    gsap.set(lbl, { height: 0, opacity: 0, marginTop: 0, marginBottom: 0, overflow: 'hidden' });
     lbl.style.display = 'block';
-    gsap.to(lbl, {
-      height: 'auto', opacity: 1, marginTop: 20, marginBottom: 12,
-      duration: 0.25, ease: 'power3.out',
-      clearProps: 'height,marginTop,marginBottom,overflow,opacity'
-    });
+    if (!reducedMotion)
+      gsap.fromTo(lbl, { opacity: 0, y: -6 }, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out', clearProps: 'all' });
   }
 }
 
 function hideIntLabel() {
   const lbl = document.getElementById('intLabel');
+  if (reducedMotion) { lbl.style.display = 'none'; return; }
   gsap.to(lbl, {
-    height: 0, opacity: 0, marginTop: 0, marginBottom: 0,
-    duration: 0.25, ease: 'power2.in',
-    onComplete: () => {
-      lbl.style.display = 'none';
-      gsap.set(lbl, { clearProps: 'height,marginTop,marginBottom,opacity' });
-    }
+    opacity: 0, y: -6, duration: 0.18, ease: 'power2.in',
+    onComplete: () => { lbl.style.display = 'none'; gsap.set(lbl, { clearProps: 'all' }); }
   });
 }
 
@@ -446,17 +452,21 @@ function addIntRow(moodId) {
     deselect(moodId, document.querySelector(`.mood-btn[data-id="${moodId}"]`));
   });
 
-  gsap.set(row, { height: 0, opacity: 0 });
   document.getElementById('moodIntRows').appendChild(row);
-  gsap.to(row, { height: 'auto', opacity: 1, duration: 0.3, ease: 'power3.out', clearProps: 'height,opacity' });
+  if (!reducedMotion) {
+    gsap.set(row, { opacity: 0, y: -10 });
+    gsap.to(row, { opacity: 1, y: 0, duration: 0.28, ease: 'power3.out', clearProps: 'opacity,transform' });
+  }
 }
 
 function removeIntRow(moodId) {
   const row = document.getElementById('irow-' + moodId);
   if (!row) return;
+  if (reducedMotion) { row.remove(); return; }
   gsap.to(row, {
-    height: 0, opacity: 0,
-    duration: 0.25, ease: 'power2.in', onComplete: () => row.remove()
+    opacity: 0, y: -6,
+    duration: 0.2, ease: 'power2.in',
+    onComplete: () => row.remove()
   });
 }
 
@@ -564,12 +574,19 @@ function goPage(name) {
   const to   = document.getElementById('page-' + name);
   const dir  = PAGE_ORDER.indexOf(name) > PAGE_ORDER.indexOf(curPage) ? 1 : -1;
 
-  gsap.set(to, { x: dir * 55, opacity: 0 });
   to.classList.remove('hidden');
-  gsap.timeline()
-    .to(from, { x: -dir * 55, opacity: 0, duration: 0.3, ease: 'power2.inOut' })
-    .to(to,   { x: 0, opacity: 1, duration: 0.3, ease: 'power2.out' }, '<0.08')
-    .call(() => { from.classList.add('hidden'); gsap.set(from, { x: 0 }); });
+  if (reducedMotion) {
+    gsap.set(from, { opacity: 0 });
+    gsap.set(to,   { opacity: 1, x: 0 });
+    from.classList.add('hidden');
+    gsap.set(from, { x: 0 });
+  } else {
+    gsap.set(to, { x: dir * 55, opacity: 0 });
+    gsap.timeline()
+      .to(from, { x: -dir * 55, opacity: 0, duration: 0.3, ease: 'power2.inOut', overwrite: 'auto' })
+      .to(to,   { x: 0, opacity: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto' }, '<0.08')
+      .call(() => { from.classList.add('hidden'); gsap.set(from, { x: 0 }); });
+  }
 
   document.getElementById('nav-log').classList.toggle('active',      name === 'log');
   document.getElementById('nav-track').classList.toggle('active',    name === 'track');
@@ -633,7 +650,7 @@ function moodAverages() {
   return avgs;
 }
 
-function renderRadar(progress = 1) {
+function renderRadar(progress = 1, _avgs, _faReady) {
   const canvas = document.getElementById('radarCanvas');
   const dpr    = window.devicePixelRatio || 1;
   const size   = canvas.parentElement.clientWidth - 32;
@@ -646,7 +663,7 @@ function renderRadar(progress = 1) {
   const cx = size / 2, cy = size / 2;
   const R  = size / 2 - 62;
   const N  = MOODS.length;
-  const avgs = moodAverages();
+  const avgs = _avgs !== undefined ? _avgs : moodAverages();
 
   const ang = i => -Math.PI / 2 + i * (2 * Math.PI / N);
   const pt  = (angle, frac) => ({
@@ -738,7 +755,7 @@ function renderRadar(progress = 1) {
     }
   });
 
-  const faReady = document.fonts.check('900 1em "Font Awesome 6 Free"');
+  const faReady = _faReady !== undefined ? _faReady : document.fonts.check('900 1em "Font Awesome 6 Free"');
 
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -772,10 +789,15 @@ function renderRadar(progress = 1) {
 }
 
 function animateRadar() {
+  if (_radarTween) { _radarTween.kill(); _radarTween = null; }
+  if (reducedMotion) { renderRadar(1); return; }
+  const avgs    = moodAverages();
+  const faReady = document.fonts.check('900 1em "Font Awesome 6 Free"');
   const obj = { t: 0 };
-  gsap.to(obj, {
+  _radarTween = gsap.to(obj, {
     t: 1, duration: 1, ease: 'power2.out',
-    onUpdate() { renderRadar(obj.t); }
+    onUpdate() { renderRadar(obj.t, avgs, faReady); },
+    onComplete() { _radarTween = null; }
   });
 }
 
@@ -787,9 +809,15 @@ function renderWeekBars() {
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d;
   });
+  const needed = new Set(days.map(d => localDateStr(d)));
+  const dayMap = {};
+  entries.forEach(e => {
+    const ds = localDateStr(e.ts);
+    if (needed.has(ds)) (dayMap[ds] = dayMap[ds] || []).push(e);
+  });
   days.forEach((d, i) => {
     const ds   = localDateStr(d);
-    const dayE = entries.filter(e => localDateStr(e.ts) === ds);
+    const dayE = dayMap[ds] || [];
     const col  = document.createElement('div');
     col.className = 'bar-col';
 
@@ -948,12 +976,19 @@ function buildCal() {
   const daysInM  = new Date(calY, calM + 1, 0).getDate();
   const today    = new Date();
 
+  const prefix = `${calY}-${String(calM + 1).padStart(2,'0')}-`;
+  const monthMap = {};
+  entries.forEach(e => {
+    const ds = localDateStr(e.ts);
+    if (ds.startsWith(prefix)) (monthMap[ds] = monthMap[ds] || []).push(e);
+  });
+
   for (let i = 0; i < firstDay; i++) {
     const e = document.createElement('div'); e.className = 'cal-cell empty'; grid.appendChild(e);
   }
   for (let d = 1; d <= daysInM; d++) {
-    const ds   = `${calY}-${String(calM + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayE = entries.filter(e => localDateStr(e.ts) === ds);
+    const ds   = `${prefix}${String(d).padStart(2,'0')}`;
+    const dayE = monthMap[ds] || [];
     const cell = document.createElement('div');
     cell.className = 'cal-cell';
     cell.textContent = d;
@@ -1000,13 +1035,10 @@ function showDayDetail(ds, dayE, cell) {
 ══════════════════════════════════════════════ */
 function updateStreak() {
   if (!entries.length) { document.getElementById('hStreak').textContent = ''; return; }
+  const dates = new Set(entries.map(e => localDateStr(e.ts)));
   let streak = 0;
   const d = new Date();
-  while (true) {
-    const ds = localDateStr(d);
-    if (entries.some(e => localDateStr(e.ts) === ds)) { streak++; d.setDate(d.getDate() - 1); }
-    else break;
-  }
+  while (dates.has(localDateStr(d))) { streak++; d.setDate(d.getDate() - 1); }
   document.getElementById('hStreak').textContent = streak > 1 ? `🔥 ${streak} day streak` : '';
 }
 
