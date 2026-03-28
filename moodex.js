@@ -126,7 +126,7 @@ function showApp(user) {
   hideSplash(() => {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('navWrap').style.display = 'flex';
+    document.getElementById('navWrap').style.display = '';
     document.getElementById('userEmailSub').textContent = user.email;
 
     gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });

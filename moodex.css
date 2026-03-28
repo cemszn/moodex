@@ -30,6 +30,7 @@ html { height: 100%; }
 body {
   display: flex; flex-direction: column;
   height: 100dvh; overflow: hidden;
+  position: relative; /* positioning context for abs nav */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: var(--bg); color: var(--text);
 }
@@ -270,15 +271,16 @@ body {
 }
 .success-ring { width: 90px; height: 90px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 38px; transform: scale(0); }
 
-/* ── Nav Wrapper — in-flow flex item at body bottom ── */
+/* ── Nav Wrapper — absolute within body (not fixed, avoids iOS bugs) ── */
 .nav-wrap {
-  flex-shrink: 0;
-  width: 100%;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
   z-index: 200;
   pointer-events: none;
   display: flex;
   justify-content: center;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: transparent;
 }
 
 /* ── FAB Nav ── */
@@ -325,11 +327,11 @@ body {
 .fab-btn {
   position: relative;
   width: 58px; height: 58px; border-radius: 50%;
-  background: linear-gradient(135deg, #A66CFF 0%, #FF6B6B 100%);
+  background: linear-gradient(130deg, #FFD93D 0%, #FF922B 60%, #FF6B6B 100%);
   border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; pointer-events: all; flex-shrink: 0;
-  box-shadow: 0 4px 24px rgba(166, 108, 255, 0.45);
+  box-shadow: 0 4px 20px rgba(255, 146, 43, 0.45);
   -webkit-tap-highlight-color: transparent;
 }
 
