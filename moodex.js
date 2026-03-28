@@ -914,24 +914,3 @@ document.addEventListener('visibilitychange', () => {
   wrap.style.display = 'block';
 });
 
-/* ══════════════════════════════════════════════
-   TEMP DEBUG — tap nav 5 times to show info
-══════════════════════════════════════════════ */
-(function() {
-  let taps = 0;
-  document.getElementById('navWrap').addEventListener('click', () => {
-    if (++taps < 5) return;
-    taps = 0;
-    const nav = document.getElementById('navWrap');
-    const r = nav.getBoundingClientRect();
-    const sab = getComputedStyle(document.documentElement).getPropertyValue('--sab') || '?';
-    const msg = [
-      'window: ' + window.innerWidth + 'x' + window.innerHeight,
-      'screen: ' + screen.width + 'x' + screen.height,
-      'nav top: ' + Math.round(r.top) + '  bot: ' + Math.round(r.bottom),
-      'sab CSS var: ' + sab,
-      'standalone: ' + (window.navigator.standalone ?? 'n/a'),
-    ].join('\n');
-    alert(msg);
-  });
-})();
