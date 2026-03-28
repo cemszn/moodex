@@ -14,6 +14,7 @@
 }
 
 :root {
+  --sab: env(safe-area-inset-bottom, 0px);
   --bg: #0e0e16;
   --surface: #181824;
   --surface2: #20202e;
