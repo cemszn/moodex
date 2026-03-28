@@ -1,4 +1,4 @@
-const CACHE = 'moodex-v5';
+const CACHE = 'moodex-v6';
 const ASSETS = [
   './',
   './moodex.css',
