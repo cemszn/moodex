@@ -344,6 +344,30 @@ function initApp() {
   document.getElementById('nav-log').addEventListener('click', () => goPage('log'));
   document.getElementById('nav-track').addEventListener('click', () => goPage('track'));
   document.getElementById('nav-settings').addEventListener('click', () => goPage('settings'));
+
+  // Swipe left/right to navigate between pages
+  let swipeStartX = 0, swipeStartY = 0, swipeLocked = false;
+  const pagesEl = document.querySelector('.pages');
+  pagesEl.addEventListener('touchstart', e => {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+    swipeLocked = false;
+  }, { passive: true });
+  pagesEl.addEventListener('touchmove', e => {
+    if (swipeLocked) return;
+    const dx = e.touches[0].clientX - swipeStartX;
+    const dy = e.touches[0].clientY - swipeStartY;
+    // Lock to horizontal only if swipe is clearly horizontal
+    if (Math.abs(dy) > Math.abs(dx)) swipeLocked = true;
+  }, { passive: true });
+  pagesEl.addEventListener('touchend', e => {
+    if (swipeLocked) return;
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    if (Math.abs(dx) < 60) return;
+    const idx = PAGE_ORDER.indexOf(curPage);
+    if (dx < 0 && idx < PAGE_ORDER.length - 1) goPage(PAGE_ORDER[idx + 1]);
+    else if (dx > 0 && idx > 0) goPage(PAGE_ORDER[idx - 1]);
+  }, { passive: true });
   document.addEventListener('click', e => {
     if (!e.target.closest('.entry-menu-wrap')) closeAllMenus();
   });
