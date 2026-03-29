@@ -428,6 +428,7 @@ function select(id, el) {
   }
   addIntRow(id);
   showIntLabel();
+  document.getElementById('logBtn').classList.add('ready');
 }
 
 function deselect(id, el) {
@@ -439,7 +440,10 @@ function deselect(id, el) {
     gsap.fromTo(el, { scale: 0.93 }, { scale: 1, duration: 0.18, ease: 'power2.out' });
   }
   removeIntRow(id);
-  if (pickedMoods.size === 0) hideIntLabel();
+  if (pickedMoods.size === 0) {
+    hideIntLabel();
+    document.getElementById('logBtn').classList.remove('ready');
+  }
 }
 
 function showIntLabel() {
@@ -554,11 +558,12 @@ async function doLog() {
   overlay.style.pointerEvents = 'all';
 
   gsap.timeline()
-    .to(ring, { scale: 1, duration: 0.45, ease: 'back.out(1.8)' })
+    .to(ring, { scale: 1, duration: 0.45, ease: 'back.out(1.8)', onComplete: () => burstConfetti(firstMood.color) })
     .to(ring, { scale: 0, opacity: 0, duration: 0.3, ease: 'power2.in', delay: 0.6 })
     .to(overlay, { opacity: 0, duration: 0.2, onComplete: () => {
       overlay.style.pointerEvents = 'none';
       gsap.set(ring, { scale: 0, opacity: 1 });
+      showToast(SUCCESS_TOASTS[Math.floor(Math.random() * SUCCESS_TOASTS.length)]);
     }});
 
   // Reset form
@@ -571,6 +576,7 @@ async function doLog() {
   document.getElementById('journalTa').value = '';
   document.getElementById('cCount').textContent = 0;
   hideIntLabel();
+  document.getElementById('logBtn').classList.remove('ready');
   gsap.to('#logBtn', { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
 }
 
@@ -813,7 +819,7 @@ function animateRadar() {
 /* ── Distribution ── */
 function renderDistribution() {
   const wrap = document.getElementById('distWrap');
-  if (!entries.length) { wrap.innerHTML = '<div class="empty-state">Log your first mood to see patterns here.</div>'; return; }
+  if (!entries.length) { wrap.innerHTML = '<div class="empty-state">Your mood patterns will bloom here once you start logging.</div>'; return; }
 
   const counts = {};
   entries.forEach(e => e.moods.forEach(({ id }) => counts[id] = (counts[id] || 0) + 1));
@@ -848,7 +854,7 @@ function renderRecent() {
   const list   = document.getElementById('recentList');
   const recent = entries.slice(0, 4);
   if (!recent.length) {
-    list.innerHTML = '<div class="empty-state">No moods logged yet.<br>Start by logging your first mood!</div>';
+    list.innerHTML = '<div class="empty-state">Nothing here yet.<br>Your story starts with a single check-in.</div>';
     return;
   }
   list.innerHTML = recent.map(entryHTML).join('');
@@ -860,7 +866,7 @@ function renderRecent() {
 /* ── History ── */
 function renderHistory() {
   const list = document.getElementById('historyList');
-  if (!entries.length) { list.innerHTML = '<div class="empty-state">Your full history will appear here once you start logging.</div>'; return; }
+  if (!entries.length) { list.innerHTML = '<div class="empty-state">Your timeline is waiting.<br>Every mood you log becomes part of the picture.</div>'; return; }
   list.innerHTML = entries.map(entryHTML).join('');
   if (!reducedMotion) {
     gsap.fromTo(list.querySelectorAll('.entry-item'),
@@ -1194,12 +1200,19 @@ function showDayDetail(ds, dayE, cell) {
    STREAK
 ══════════════════════════════════════════════ */
 function updateStreak() {
-  if (!entries.length) { document.getElementById('hStreak').textContent = ''; return; }
+  const el = document.getElementById('hStreak');
+  if (!entries.length) { el.textContent = ''; el.classList.remove('milestone'); return; }
   const dates = new Set(entries.map(e => localDateStr(e.ts)));
   let streak = 0;
   const d = new Date();
   while (dates.has(localDateStr(d))) { streak++; d.setDate(d.getDate() - 1); }
-  document.getElementById('hStreak').innerHTML = streak > 1 ? `<i class="fa-solid fa-fire-flame-curved"></i>${streak} day streak` : '';
+  if (streak > 1) {
+    el.innerHTML = `<i class="fa-solid fa-fire-flame-curved"></i>${streak} day streak`;
+    el.classList.toggle('milestone', streak >= 5);
+  } else {
+    el.textContent = '';
+    el.classList.remove('milestone');
+  }
 }
 
 /* ══════════════════════════════════════════════
@@ -1212,6 +1225,45 @@ function showToast(msg) {
   gsap.timeline()
     .to(t, { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' })
     .to(t, { opacity: 0, y: 8, duration: 0.2, delay: 1.7, ease: 'power2.in' });
+}
+
+const SUCCESS_TOASTS = [
+  'Logged! You showed up for yourself today.',
+  'Noted. Feelings filed successfully.',
+  'Captured. Your future self will thank you.',
+  'Saved! One more data point for your journey.',
+  'Done. Honesty looks good on you.',
+  'Logged! Awareness is a superpower.',
+];
+
+function burstConfetti(color) {
+  if (reducedMotion) return;
+  const container = document.getElementById('successOverlay');
+  const dots = [];
+  const colors = [color, '#FFD93D', '#6BCB77', '#FF6B6B', '#6C9BCF', color];
+  for (let i = 0; i < 28; i++) {
+    const dot = document.createElement('div');
+    const size = 4 + Math.random() * 6;
+    Object.assign(dot.style, {
+      position: 'fixed', width: size + 'px', height: size + 'px',
+      borderRadius: Math.random() > 0.4 ? '50%' : '2px',
+      background: colors[Math.floor(Math.random() * colors.length)],
+      top: '50%', left: '50%', pointerEvents: 'none', zIndex: '401',
+    });
+    container.appendChild(dot);
+    dots.push(dot);
+  }
+  dots.forEach((dot, i) => {
+    const angle = (Math.PI * 2 * i) / dots.length + (Math.random() - 0.5) * 0.5;
+    const dist = 60 + Math.random() * 120;
+    const dur = 0.5 + Math.random() * 0.3;
+    gsap.to(dot, {
+      x: Math.cos(angle) * dist, y: Math.sin(angle) * dist - 40,
+      opacity: 0, scale: 0.2, rotation: Math.random() * 360,
+      duration: dur, ease: 'power2.out', delay: Math.random() * 0.08,
+      onComplete: () => dot.remove(),
+    });
+  });
 }
 
 /* ══════════════════════════════════════════════
