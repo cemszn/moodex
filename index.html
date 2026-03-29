@@ -53,10 +53,7 @@
 
   <header class="app-header">
     <div class="logo">Moodex</div>
-    <div class="header-right">
-      <div class="header-date" id="hDate"></div>
-      <div class="streak" id="hStreak"></div>
-    </div>
+    <div class="streak" id="hStreak"></div>
   </header>
 
   <div class="pages">
@@ -217,20 +214,12 @@
     </div>
   </div>
 
-  <!-- NAV — absolute within #app so it respects content max-width -->
-  <div id="navWrap" style="display:none">
-    <div class="fab-nav" id="fabNav">
-      <div class="fab-menu" id="fabMenu">
-        <button class="fab-menu-item" id="nav-log"><i class="fa-solid fa-pen-to-square"></i><span>Log</span></button>
-        <button class="fab-menu-item" id="nav-track"><i class="fa-solid fa-chart-line"></i><span>Track</span></button>
-        <button class="fab-menu-item" id="nav-settings"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
-      </div>
-      <button class="fab-btn" id="fabBtn" aria-label="Open navigation">
-        <i class="fab-icon fab-icon-menu fa-solid fa-bars"></i>
-        <i class="fab-icon fab-icon-close fa-solid fa-xmark"></i>
-      </button>
-    </div>
-  </div>
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottomNav" style="display:none">
+    <button class="nav-item active" id="nav-log" type="button"><i class="fa-solid fa-pen-to-square"></i><span>Log</span></button>
+    <button class="nav-item" id="nav-track" type="button"><i class="fa-solid fa-chart-line"></i><span>Track</span></button>
+    <button class="nav-item" id="nav-settings" type="button"><i class="fa-solid fa-gear"></i><span>Settings</span></button>
+  </nav>
 
 </div><!-- /app -->
 

@@ -123,7 +123,7 @@ function hideSplash(revealFn) {
 function showLogin() {
   hideSplash(() => {
     document.getElementById('app').style.display = 'none';
-    document.getElementById('navWrap').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('loginErr').textContent = '';
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
@@ -142,14 +142,22 @@ function showLogin() {
 function showApp(user) {
   hideSplash(() => {
     document.getElementById('login-screen').style.display = 'none';
+
+    if (!reducedMotion) {
+      // Pre-hide before revealing to prevent flash-of-visible-content
+      gsap.set('.app-header', { y: -20, opacity: 0 });
+      gsap.set('#page-log .mood-btn', { y: 20, opacity: 0 });
+      gsap.set('#page-log .journal-card, #logBtn', { y: 20, opacity: 0 });
+    }
+
     document.getElementById('app').style.display = 'flex';
-    document.getElementById('navWrap').style.display = '';
+    document.getElementById('bottomNav').style.display = '';
     document.getElementById('userEmailSub').textContent = user.email;
 
     if (!reducedMotion) {
-      gsap.from('.app-header', { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
-      gsap.from('#page-log .mood-btn', { y: 20, opacity: 0, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
-      gsap.from('.journal-card, #logBtn', { y: 20, opacity: 0, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out', clearProps: 'all' });
+      gsap.to('.app-header', { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' });
+      gsap.to('#page-log .mood-btn', { y: 0, opacity: 1, stagger: 0.04, duration: 0.4, delay: 0.15, ease: 'power2.out' });
+      gsap.to('#page-log .journal-card, #logBtn', { y: 0, opacity: 1, stagger: 0.08, duration: 0.4, delay: 0.3, ease: 'power2.out', clearProps: 'all' });
     }
   });
 }
@@ -303,9 +311,6 @@ function initApp() {
 
   document.getElementById('logHero').textContent = getHeroGreeting();
 
-  document.getElementById('hDate').textContent =
-    now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-
   // Mood grid
   const grid = document.getElementById('moodGrid');
   MOODS.forEach(m => {
@@ -336,12 +341,11 @@ function initApp() {
   });
 
   document.getElementById('logBtn').addEventListener('click', doLog);
-  document.getElementById('fabBtn').addEventListener('click', toggleFab);
-  document.getElementById('nav-log').addEventListener('click', () => { closeFab(); goPage('log'); });
-  document.getElementById('nav-track').addEventListener('click', () => { closeFab(); goPage('track'); });
-  document.getElementById('nav-settings').addEventListener('click', () => { closeFab(); goPage('settings'); });
+  document.getElementById('nav-log').addEventListener('click', () => goPage('log'));
+  document.getElementById('nav-track').addEventListener('click', () => goPage('track'));
+  document.getElementById('nav-settings').addEventListener('click', () => goPage('settings'));
   document.addEventListener('click', e => {
-    if (fabOpen && !document.getElementById('fabNav').contains(e.target)) closeFab();
+    if (!e.target.closest('.entry-menu-wrap')) closeAllMenus();
   });
   document.getElementById('trackTabs').addEventListener('click', e => {
     const t = e.target.dataset.tab; if (t) switchTrackTab(t);
@@ -546,42 +550,6 @@ async function doLog() {
   gsap.to('#logBtn', { scale: 0.94, duration: 0.1, yoyo: true, repeat: 1 });
 }
 
-/* ══════════════════════════════════════════════
-   FAB NAVIGATION
-══════════════════════════════════════════════ */
-let fabOpen = false;
-
-function toggleFab() {
-  fabOpen ? closeFab() : openFab();
-}
-
-function openFab() {
-  fabOpen = true;
-  const nav = document.getElementById('fabNav');
-  const items = document.querySelectorAll('.fab-menu-item');
-  nav.classList.add('open');
-  items.forEach(el => { el.style.pointerEvents = 'all'; });
-  gsap.fromTo(items,
-    { opacity: 0, y: -10, scale: 0.92 },
-    { opacity: 1, y: 0, scale: 1, duration: 0.22, ease: 'power2.out', stagger: 0.06 }
-  );
-  gsap.to('#fabBtn', { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1 });
-}
-
-function closeFab() {
-  if (!fabOpen) return;
-  fabOpen = false;
-  const nav = document.getElementById('fabNav');
-  const items = document.querySelectorAll('.fab-menu-item');
-  gsap.to(items, {
-    opacity: 0, y: -8, scale: 0.92, duration: 0.16, ease: 'power2.in',
-    stagger: { each: 0.04, from: 'end' },
-    onComplete: () => {
-      nav.classList.remove('open');
-      items.forEach(el => { el.style.pointerEvents = 'none'; });
-    }
-  });
-}
 
 /* ══════════════════════════════════════════════
    PAGE NAVIGATION
@@ -862,21 +830,7 @@ function renderRecent() {
   list.innerHTML = recent.map(entryHTML).join('');
   gsap.fromTo(list.querySelectorAll('.entry-item'),
     { opacity: 0, y: 8 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.28 });
-  list.onclick = e => {
-    const del = e.target.closest('.entry-delete');
-    if (del) { deleteEntry(del.dataset.docid); return; }
-    const edit = e.target.closest('.entry-edit');
-    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
-    const item = e.target.closest('.entry-item');
-    if (item) toggleEntry(item);
-  };
-  list.onkeydown = e => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.entry-delete') || e.target.closest('.entry-edit')) return;
-      const item = e.target.closest('.entry-item');
-      if (item) { e.preventDefault(); toggleEntry(item); }
-    }
-  };
+  attachEntryListeners(list);
 }
 
 /* ── History ── */
@@ -888,55 +842,86 @@ function renderHistory() {
     gsap.fromTo(list.querySelectorAll('.entry-item'),
       { opacity: 0, y: 8 }, { opacity: 1, y: 0, stagger: 0.05, duration: 0.28, ease: 'power2.out', clearProps: 'opacity,transform' });
   }
-  list.onclick = e => {
-    const del = e.target.closest('.entry-delete');
-    if (del) { deleteEntry(del.dataset.docid); return; }
-    const edit = e.target.closest('.entry-edit');
-    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
-    const item = e.target.closest('.entry-item');
-    if (item) toggleEntry(item);
-  };
-  list.onkeydown = e => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      if (e.target.closest('.entry-delete') || e.target.closest('.entry-edit')) return;
-      const item = e.target.closest('.entry-item');
-      if (item) { e.preventDefault(); toggleEntry(item); }
-    }
-  };
+  attachEntryListeners(list);
 }
 
 /* ── Entry HTML ── */
 function entryHTML(e) {
   const d          = new Date(e.ts);
-  const t          = d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' · ' +
-                     d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  const date       = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const time       = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   const firstColor = (MOODS.find(m => m.id === e.moods[0].id) || {}).color || '#888';
+  const docid      = e._docId || '';
   const chips      = e.moods.map(({ id, intensity }) => {
     const m = MOODS.find(m => m.id === id);
     if (!m) return '';
-    return `<span class="mood-chip" style="background:${m.color}20;color:${m.color}"><i class="fa-solid ${m.icon}"></i> ${intensity}</span>`;
+    return `<span class="mood-chip" style="background:${m.color}22;color:${m.color}"><i class="fa-solid ${m.icon}"></i>${m.label}<span class="chip-dot">•</span>${intensity}</span>`;
   }).join('');
-  return `<div class="entry-item" style="border-left-color:${firstColor}" tabindex="0" role="button" data-docid="${e._docId || ''}">
-    <div class="entry-header">
-      <div class="entry-header-left">
-        <div class="entry-top-row">
-          <div class="entry-chips">${chips}</div>
-          <div class="entry-time">${t}</div>
+  return `<div class="entry-item" style="border-left-color:${firstColor}" tabindex="0" data-docid="${docid}">
+    <div class="entry-row1">
+      <div class="entry-chips">${chips}</div>
+      <div class="entry-meta">
+        <span class="entry-date">${date}</span>
+        <span class="entry-time">${time}</span>
+        <div class="entry-menu-wrap">
+          <div class="entry-menu-actions">
+            <button class="entry-delete" type="button" aria-label="Delete entry" data-docid="${docid}"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="entry-edit" type="button" aria-label="Edit entry" data-docid="${docid}"><i class="fa-solid fa-pen"></i></button>
+          </div>
+          <button class="entry-menu-btn" type="button" aria-label="More options"><i class="fa-solid fa-ellipsis-vertical"></i></button>
         </div>
-        ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ''}
-      </div>
-      <div class="entry-actions">
-        ${e.note ? `<i class="entry-chevron fa-solid fa-chevron-down"></i>` : ''}
-        <button class="entry-edit" type="button" aria-label="Edit entry" data-docid="${e._docId || ''}"><i class="fa-solid fa-pen"></i></button>
-        <button class="entry-delete" type="button" aria-label="Delete entry" data-docid="${e._docId || ''}"><i class="fa-solid fa-trash-can"></i></button>
+        ${e.note ? `<button class="entry-expand-btn" type="button" aria-label="Expand note"><i class="fa-solid fa-chevron-down"></i></button>` : ''}
       </div>
     </div>
+    ${e.note ? `<div class="entry-note">${escapeHtml(e.note)}</div>` : ''}
   </div>`;
+}
+
+/* ── Close all open menus ── */
+function closeAllMenus() {
+  document.querySelectorAll('.entry-menu-wrap.menu-open').forEach(w => w.classList.remove('menu-open'));
+}
+
+/* ── Attach entry list click/keyboard listeners ── */
+function attachEntryListeners(list) {
+  list.onclick = e => {
+    const del = e.target.closest('.entry-delete');
+    if (del) { deleteEntry(del.dataset.docid); return; }
+
+    const edit = e.target.closest('.entry-edit');
+    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
+
+    const menuBtn = e.target.closest('.entry-menu-btn');
+    if (menuBtn) {
+      const wrap = menuBtn.closest('.entry-menu-wrap');
+      const wasOpen = wrap.classList.contains('menu-open');
+      closeAllMenus();
+      if (!wasOpen) wrap.classList.add('menu-open');
+      e.stopPropagation();
+      return;
+    }
+
+    const expandBtn = e.target.closest('.entry-expand-btn');
+    if (expandBtn) {
+      const item = expandBtn.closest('.entry-item');
+      if (item) toggleEntry(item);
+      e.stopPropagation();
+      return;
+    }
+
+    closeAllMenus();
+  };
+  list.onkeydown = e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('entry-expand-btn')) {
+      e.preventDefault();
+      const item = e.target.closest('.entry-item');
+      if (item) toggleEntry(item);
+    }
+  };
 }
 
 /* ── Entry expand/collapse ── */
 function toggleEntry(item) {
-  if (!item.querySelector('.entry-note')) return;
   item.classList.toggle('open');
 }
 
@@ -1177,14 +1162,7 @@ function showDayDetail(ds, dayE, cell) {
   detail.innerHTML = `<div class="section-label">${label}</div>
     <div class="entry-list" id="calDetailList">${dayE.map(entryHTML).join('')}</div>`;
   const calList = detail.querySelector('#calDetailList');
-  calList.onclick = e => {
-    const del = e.target.closest('.entry-delete');
-    if (del) { deleteEntry(del.dataset.docid); return; }
-    const edit = e.target.closest('.entry-edit');
-    if (edit) { const en = entries.find(x => x._docId === edit.dataset.docid); if (en) openEditModal(en); return; }
-    const item = e.target.closest('.entry-item');
-    if (item) toggleEntry(item);
-  };
+  attachEntryListeners(calList);
   gsap.fromTo(detail, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.25 });
 }
 
@@ -1197,7 +1175,7 @@ function updateStreak() {
   let streak = 0;
   const d = new Date();
   while (dates.has(localDateStr(d))) { streak++; d.setDate(d.getDate() - 1); }
-  document.getElementById('hStreak').textContent = streak > 1 ? `🔥 ${streak} day streak` : '';
+  document.getElementById('hStreak').innerHTML = streak > 1 ? `<i class="fa-solid fa-fire-flame-curved"></i>${streak} day streak` : '';
 }
 
 /* ══════════════════════════════════════════════
